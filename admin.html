@@ -634,7 +634,7 @@ async function emailBuilder(){
   const rows=await api(`EmailTemplates?${TQ}&select=*&order=RowID`);
   TPL=rows[0]||null;
   M.innerHTML=`<h2>Email templates</h2>
-  <div class="sub2">Drag-and-drop builder. Output is email-safe HTML saved to <b>EmailTemplates.Email_Content</b>.</div>
+  <div class="sub2">Drag-and-drop builder. Produces email-safe HTML that is saved straight onto the template.</div>
   <div class="panel">
     <div class="bar">
       <select id="tplsel">${rows.map(r=>`<option value="${r.RowID}">${esc(r.Full_Name)}</option>`).join("")}</select>
@@ -697,7 +697,7 @@ async function pageBuilder(){
   const rows=await api(`ContentLinks?${TQ}&select=*&order=SortOrder`);
   PG=rows[0]||null;
   M.innerHTML=`<h2>Content pages</h2>
-  <div class="sub2">Drag-and-drop editor. Saves to <b>ContentLinks.ContentText</b> — the storefront renders it immediately.</div>
+  <div class="sub2">Drag-and-drop editor. Changes appear on the website as soon as you save.</div>
   <div class="panel">
     <div class="bar">
       <select id="pgsel">${rows.map(r=>`<option value="${r.ContentLinkID}">${esc(r.ContentLink)}</option>`).join("")}</select>
