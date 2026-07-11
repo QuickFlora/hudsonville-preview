@@ -140,6 +140,13 @@ async function rpc(fn,args){return api("rpc/"+fn,{method:"POST",body:JSON.string
    The production CustomerInformation.CustomerPassword column is cleartext (P1)
    and is deliberately NOT replicated or written to here. */
 let AUTH=null, PROFILE=null, ADDRESSES=[], MYORDERS=[], WISH=[], LOYALTY=null, AUTHERR="";
+/* Legacy QuickFlora has no OrderStatus column — status is the OrderHeader bit flags. */
+function ostat(o){ return o.Billed?"BILLED":o.Shipped?"SHIPPED":o.Printed?"PRINTED":o.Approved?"APPROVED":"NEW"; }
+/* hardened checkout state */
+let PAYSIM="ok";        // which test card the hosted field simulates
+let AUTHZ=null;         // gateway authorisation (token-based; no card data)
+let IDEM=null;          // idempotency key for the current checkout attempt
+let SUBMITTING=false;   // client-side double-submit guard
 const CUSTID = () => (AUTH && AUTH.email) ? AUTH.email : "GUEST";
 function saveAuth(a){AUTH=a; a?localStorage.setItem("qf_auth",JSON.stringify(a)):localStorage.removeItem("qf_auth");}
 function loadAuth(){try{AUTH=JSON.parse(localStorage.getItem("qf_auth")||"null");}catch(e){AUTH=null;}}
@@ -257,9 +264,11 @@ async function loadStore(){
   CATS=cats;ASSOC=assoc;REVIEWS=revs;OCCASIONS=occ;SHIPS=ships;
   if(!SHIPID) SHIPID=(ships.find(s=>s.ShipMethodID!=='PICKUP')||ships[0]||{}).ShipMethodID||"";
 }
+/* Cart = the legacy QuickFlora tables: CartItems (lines) -> CartItemsDetails + CartDetails (checkout header).
+   Legacy column names throughout: RowID / ItemName / Quantity / Price / CartRefID. */
 async function loadCart(){
-  CART=await api(`ItemsCart?CartSessionID=eq.${sid()}&select=*&order=CartLineID`);
-  document.getElementById("badge").textContent=CART.reduce((s,l)=>s+Number(l.OrderQty),0);
+  CART=await api(`CartItems?CartRefID=eq.${sid()}&select=*&order=RowID`);
+  document.getElementById("badge").textContent=CART.reduce((s,l)=>s+Number(l.Quantity),0);
 }
 function applyTheme(){
   const r=document.documentElement.style,c=(k,f)=>THEME[k]||f;
@@ -296,25 +305,32 @@ function eligibleAddons(){const c=cartCategories();if(!c.size)return[];
   const ok=new Set(ADDONMAP.filter(m=>c.has(m.ItemCategoryID)).map(m=>m.AddOnItemID));
   return ADDONS.filter(a=>ok.has(a.AddOnItemID));}
 
-/* cart ops */
+/* cart ops — legacy CartItems */
 async function addToCart(id,price,qty,desc,pic){
-  const ex=CART.find(l=>l.ItemID===id&&Number(l.ItemUnitPrice)===Number(price));
-  if(ex) await api(`ItemsCart?CartLineID=eq.${ex.CartLineID}`,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({OrderQty:Number(ex.OrderQty)+qty})});
-  else await api("ItemsCart",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({
-    CompanyID:CO,DivisionID:DV,DepartmentID:DP,CartSessionID:sid(),ItemID:id,Description:desc,
-    OrderQty:qty,ItemUnitPrice:Number(price),PictureURL:pic})});
+  const ex=CART.find(l=>l.ItemID===id&&Number(l.Price)===Number(price));
+  if(ex) await api(`CartItems?RowID=eq.${ex.RowID}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({Quantity:Number(ex.Quantity)+qty,Total:(Number(ex.Quantity)+qty)*Number(price)})});
+  else await api("CartItems",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({
+    CompanyID:CO,DivisionID:DV,DepartmentID:DP,
+    CustomerID:CUSTID(), CartRefID:sid(),          // legacy keys the cart by CustomerID; CartRefID = browser session
+    ItemID:id, ItemName:String(desc||"").slice(0,50),
+    Quantity:qty, Price:Number(price), ItemFullPrice:Number(price),
+    Total:qty*Number(price), PictureURL:String(pic||"").slice(0,80),
+    CurrencyID:"USD", locktimestamp:new Date().toISOString()})});
   await loadCart();
 }
 async function setQty(id,q){if(q<1)return removeLine(id);
-  await api(`ItemsCart?CartLineID=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({OrderQty:q})});
+  const l=CART.find(x=>x.RowID===id)||{};
+  await api(`CartItems?RowID=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({Quantity:q,Total:q*Number(l.Price||0)})});
   await loadCart();COUPON=null;render();}
-async function removeLine(id){await api(`ItemsCart?CartLineID=eq.${id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await loadCart();COUPON=null;render();}
-async function clearCart(){await api(`ItemsCart?CartSessionID=eq.${sid()}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await loadCart();COUPON=null;render();}
+async function removeLine(id){await api(`CartItems?RowID=eq.${id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await loadCart();COUPON=null;render();}
+async function clearCart(){await api(`CartItems?CartRefID=eq.${sid()}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await loadCart();COUPON=null;render();}
 
 /* ---------- totals (client preview; server re-computes authoritatively) ---------- */
 function goodsSubtotal(){
   const elig=eligibleAddons();
-  const cart=CART.reduce((s,l)=>s+Number(l.OrderQty)*Number(l.ItemUnitPrice),0);
+  const cart=CART.reduce((s,l)=>s+Number(l.Quantity)*Number(l.Price),0);
   const add=Object.keys(PICKED).filter(k=>PICKED[k]&&elig.some(a=>a.AddOnItemID===k))
              .reduce((s,k)=>s+Number((ADDONS.find(a=>a.AddOnItemID===k)||{}).Price||0),0);
   return +(cart+add).toFixed(2);
@@ -448,12 +464,12 @@ function vCart(){
   <div class="phead"><h1>Your Cart</h1></div>
   <div class="content two"><div class="card2">
     ${CART.map(l=>`<div class="row"><div class="th"><img src="${l.PictureURL||""}"></div>
-      <div class="gr"><div style="font-family:var(--serif);font-size:17px">${l.Description}</div>
-      <div style="color:var(--muted);font-size:12.5px">Item ${l.ItemID} · ${money(l.ItemUnitPrice)} ea</div><div style="height:8px"></div>
-      <div class="qty"><button onclick="setQty(${l.CartLineID},${Number(l.OrderQty)-1})">−</button><span>${Number(l.OrderQty)}</span>
-      <button onclick="setQty(${l.CartLineID},${Number(l.OrderQty)+1})">+</button>
-      <span class="lnk" style="margin-left:12px" onclick="removeLine(${l.CartLineID})">Remove</span></div></div>
-      <div style="font-weight:600">${money(Number(l.OrderQty)*Number(l.ItemUnitPrice))}</div></div>`).join("")}
+      <div class="gr"><div style="font-family:var(--serif);font-size:17px">${l.ItemName}</div>
+      <div style="color:var(--muted);font-size:12.5px">Item ${l.ItemID} · ${money(l.Price)} ea</div><div style="height:8px"></div>
+      <div class="qty"><button onclick="setQty(${l.RowID},${Number(l.Quantity)-1})">−</button><span>${Number(l.Quantity)}</span>
+      <button onclick="setQty(${l.RowID},${Number(l.Quantity)+1})">+</button>
+      <span class="lnk" style="margin-left:12px" onclick="removeLine(${l.RowID})">Remove</span></div></div>
+      <div style="font-weight:600">${money(Number(l.Quantity)*Number(l.Price))}</div></div>`).join("")}
     <div style="padding-top:14px"><span class="lnk" onclick="clearCart()">Clear cart</span></div></div>
     <div class="card2"><div class="fs">Summary</div>
       <div class="tot big"><span>Subtotal</span><span>${money(t.sub)}</span></div>
@@ -491,9 +507,10 @@ function vCheckout(){
       <div><label>State</label><input id="f_state" value="MI"></div>
       <div><label>ZIP</label><input id="f_zip" value="49426" onchange="refreshQuote()"></div>
       <div><label>Phone</label><input id="f_phone" value="616-669-1750"></div>
-      <div><label>Delivery date</label><input type="date" id="f_date" value="${tmr}" onchange="refreshQuote()"></div>
+      <div><label>Delivery date</label><input type="date" id="f_date" min="${new Date().toISOString().slice(0,10)}" value="${tmr}" onchange="refreshQuote()"></div>
       <div><label>Occasion</label><select id="f_occ">${OCCASIONS.map(o=>`<option>${o.OccasionDesc}</option>`).join("")}</select></div>
-      <div class="full"><label>Card message</label><textarea id="f_msg">Thinking of you today. — The Frost family</textarea></div>
+      <div class="full"><label>Card message <span id="msgcount" style="color:var(--muted);font-weight:400">0 / 240</span></label>
+        <textarea id="f_msg" maxlength="240" oninput="msgCount()">Thinking of you today. — The Frost family</textarea></div>
       <div class="full"><label>Your email</label><input id="f_email" value="${AUTH?AUTH.email:'alex@quickflora.com'}" ${AUTH?'readonly':''}></div>
     </div>
     ${AUTH?`<label class="addon" style="text-transform:none;letter-spacing:0;color:var(--ink)">
@@ -521,7 +538,18 @@ function vCheckout(){
       ${a.ItemFileName?`<img class="ai" src="${a.ItemFileName}">`:`<span class="ai"></span>`}
       <span style="flex:1"><b>${a.AddOnItemName}</b><br><span style="color:var(--muted);font-size:12.5px">${a.AddOnDescription||""}</span></span>
       <b>${money(a.Price)}</b></label>`).join("")}`:''}
-    <div class="note"><b>No card data is collected or stored.</b> Totals below are a preview — the server recalculates tax, delivery, coupon and gift card independently when you place the order.</div>
+    <div style="height:18px"></div>
+    <div class="fs">Payment</div>
+    <div class="note" style="margin-bottom:10px"><b>No card number is ever entered here.</b> In production this block is the gateway's
+      hosted field — it returns a token, and only the token, an auth code and the last four digits reach QuickFlora.
+      Nothing is stored that could be used to charge the card again.</div>
+    <label class="addon" style="text-transform:none;letter-spacing:0;color:var(--ink)">
+      <input type="radio" name="pay" value="ok" ${PAYSIM!=="decline"?"checked":""} onchange="PAYSIM='ok'">
+      <span style="flex:1"><b>Test card — approved</b><br><span style="color:var(--muted);font-size:12.5px">Visa •••• 4242</span></span></label>
+    <label class="addon" style="text-transform:none;letter-spacing:0;color:var(--ink)">
+      <input type="radio" name="pay" value="decline" ${PAYSIM==="decline"?"checked":""} onchange="PAYSIM='decline'">
+      <span style="flex:1"><b>Test card — declined</b><br><span style="color:var(--muted);font-size:12.5px">Proves no order is written on a decline</span></span></label>
+    ${AUTHZ?`<div class="okmsg">Authorised ${money(AUTHZ.Amount)} · ${AUTHZ.CardBrand} ••••${AUTHZ.Last4} · ${AUTHZ.AuthCode}</div>`:''}
   </div>
   <div class="card2"><div class="fs">Order summary</div>
     <div class="tot"><span>Goods</span><span>${money(t.sub)}</span></div>
@@ -537,9 +565,35 @@ function vCheckout(){
       ${blocked?'Cannot deliver to that ZIP':'Place order'}</button>
   </div></div></div>`;
 }
+function msgCount(){const t=document.getElementById("f_msg"),c=document.getElementById("msgcount");
+  if(!t||!c)return; c.textContent=`${t.value.length} / 240`;
+  c.style.color = t.value.length>220 ? "var(--rose)" : "var(--muted)";}
+
+/* One idempotency key per checkout attempt. It survives re-renders, so a double-click
+   or a retry sends the SAME key and the server returns the SAME order instead of writing a second one. */
+function idemKey(){ if(!IDEM) IDEM = "IDEM-"+sid()+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); return IDEM; }
+
 async function submitOrder(){
-  const b=document.getElementById("placeBtn");b.disabled=true;b.textContent="Placing order…";
+  const b=document.getElementById("placeBtn");
+  if(SUBMITTING) return;                       // client-side guard
+  SUBMITTING=true; b.disabled=true; b.textContent="Placing order…";
   try{
+    const t=preview();
+
+    /* 1. AUTHORISE FIRST. A declined card must never produce an order row. */
+    if(t.due>0 && !AUTHZ){
+      b.textContent="Authorising card…";
+      const token = (PAYSIM==="decline")
+        ? "tok_decline_"+Math.random().toString(36).slice(2,10)   // hosted field would return this
+        : "tok_test_"  +Math.random().toString(36).slice(2,10);
+      const az=await rpc("fn_authorize_payment",{p_co:CO,p_dv:DV,p_dp:DP,p_session:sid(),
+        p_amount:t.due,p_token:token,p_brand:"VISA",p_last4:"4242"});
+      if(!az.ok){LASTERR=az.reason;SUBMITTING=false;b.disabled=false;b.textContent="Place order";return render();}
+      AUTHZ=az;
+    }
+
+    /* 2. Place the order against the authorisation. */
+    b.textContent="Placing order…";
     const res=await rpc("fn_place_order",{
       p_co:CO,p_dv:DV,p_dp:DP,p_session:sid(),
       p_cust:{first:val("f_first"),last:val("f_last"),addr1:val("f_addr1"),city:val("f_city"),
@@ -548,19 +602,22 @@ async function submitOrder(){
       p_coupon:(COUPON&&COUPON.valid)?COUPON.CouponCode:null,
       p_giftcard:(GIFT&&GIFT.valid)?GIFT.GiftCardNumber:null,
       p_cardmessage:val("f_msg"),
-      p_addons:Object.keys(PICKED).filter(k=>PICKED[k])
+      p_addons:Object.keys(PICKED).filter(k=>PICKED[k]),
+      p_idem:idemKey(),
+      p_authcode:AUTHZ?AUTHZ.AuthCode:null
     });
-    if(!res.ok){LASTERR=res.error;b.disabled=false;b.textContent="Place order";return render();}
+    if(!res.ok){LASTERR=res.error;SUBMITTING=false;b.disabled=false;b.textContent="Place order";return render();}
+    IDEM=null; AUTHZ=null;                     // consumed — a new checkout gets a new key
     const sv=document.getElementById("f_savead");
     if(AUTH && sv && sv.checked){
       await rpc("fn_save_shipto",{p_co:CO,p_dv:DV,p_dp:DP,p_customer:CUSTID(),p_addr:{
         ShipToName:(val("f_first")+" "+val("f_last")).trim(),ShipToAddress1:val("f_addr1"),
         ShipToCity:val("f_city"),ShipToState:val("f_state"),ShipToZip:val("f_zip"),ShipToPhone:val("f_phone")}});
     }
-    PICKED={};COUPON=null;GIFT=null;QUOTE=null;CPNMSG="";GCMSG="";
+    PICKED={};COUPON=null;GIFT=null;QUOTE=null;CPNMSG="";GCMSG="";SUBMITTING=false;
     await loadCart(); if(AUTH) await loadAccount();
     go("done",res);
-  }catch(e){LASTERR=e.message;b.disabled=false;b.textContent="Place order";render();}
+  }catch(e){LASTERR=e.message;SUBMITTING=false;b.disabled=false;b.textContent="Place order";render();}
 }
 function vDone(r){
   const tx=r.tax&&r.tax.Lines?r.tax.Lines:[];
@@ -594,7 +651,7 @@ async function doLookup(){
   if(!h.length)return out.innerHTML='<div class="err">No such order.</div>';
   const d=await api(`OrderDetail?OrderNumber=eq.${encodeURIComponent(n)}&select=*&order=LineId`),o=h[0];
   out.innerHTML=`<div style="height:16px"></div><table class="tbl">
-    ${[["OrderNumber",o.OrderNumber],["Status",o.OrderStatus],["Recipient",o.ShippingName],
+    ${[["OrderNumber",o.OrderNumber],["Status",ostat(o)],["Recipient",o.ShippingName],
        ["Deliver to",[o.ShippingCity,o.ShippingZip].join(" ")],["Due",(o.OrderDueDate||"").slice(0,10)],
        ["Tax group",o.TaxGroupID],["Ship method",o.ShipMethodID],["Coupon",o.DiscountCouponCode||"—"],
        ["Gift card",o.GiftCertificate||"—"],["Total",money(o.Total)],["Balance due",money(o.BalanceDue)]]
@@ -653,7 +710,7 @@ function vAccount(){
         ${MYORDERS.length?`<table class="tbl"><thead><tr><th>Order</th><th>Date</th><th>Deliver to</th><th>Status</th><th>Total</th></tr></thead>
         <tbody>${MYORDERS.map(o=>`<tr><td class="lnk" onclick="go('lookup','${o.OrderNumber}')">${o.OrderNumber}</td>
           <td>${(o.OrderDate||"").slice(0,10)}</td><td>${o.ShippingName||""}</td>
-          <td>${o.OrderStatus||"NEW"}</td><td>${money(o.Total)}</td></tr>`).join("")}</tbody></table>`
+          <td>${ostat(o)}</td><td>${money(o.Total)}</td></tr>`).join("")}</tbody></table>`
         :'<p style="color:var(--muted)">No orders yet.</p>'}
       </div>
       <div class="card2"><div class="fs">Your details</div>
@@ -710,6 +767,7 @@ function render(){
     slideTimer=setInterval(()=>{if(ROUTE.page!=="home"){clearInterval(slideTimer);return;}
       slideIdx=(slideIdx+1)%SLIDES.length;render();},8000);}
   if(p==="checkout"&&QUOTE===null){refreshQuote();}
+  if(p==="checkout"){msgCount();}
 }
 (async function(){try{
   loadAuth();

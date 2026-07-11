@@ -154,7 +154,7 @@ const GRIDS={
         cols:["AddOnItemID","ItemCategoryID","ItemID"],limit:600},
   /* record editors reached from the Orders / Reviews screens */
   orderhdr:{title:"Order",sub:"OrderHeader — the full order record.",table:"OrderHeader",pk:"id",
-        cols:["OrderNumber","CustomerID","ShippingName","Total","OrderStatus"]},
+        cols:["OrderNumber","CustomerID","ShippingName","Total","Approved","Printed","Shipped","Billed"]},
   orderlines:{title:"Order lines",sub:"OrderDetail — one row per item on an order.",table:"OrderDetail",pk:"OrderLineNumber",
         cols:["OrderNumber","LineId","ItemID","Description","OrderQty","ItemUnitPrice","SubTotal","Total"]},
   reviewrec:{title:"Review",sub:"InventoryItemCustomerReviews — only Approved=true rows show on the storefront.",
@@ -183,10 +183,20 @@ async function render(){
   }catch(e){ M.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
 
+/* Legacy QuickFlora has NO OrderStatus column — status is the bit flags on OrderHeader.
+   Derived here exactly as the legacy back office does. */
+function ostat(o){
+  if(o.Billed)   return "BILLED";
+  if(o.Shipped)  return "SHIPPED";
+  if(o.Printed)  return "PRINTED";
+  if(o.Approved) return "APPROVED";
+  return "NEW";
+}
+
 /* ---------- DASHBOARD ---------- */
 async function dash(){
   const [oh,items,cps,gcs] = await Promise.all([
-    api(`OrderHeader?${TQ}&select=OrderNumber,Total,OrderStatus,OrderDate,BalanceDue`),
+    api(`OrderHeader?${TQ}&select=OrderNumber,Total,OrderDate,BalanceDue,Approved,Printed,Shipped,Billed`),
     api(`InventoryItems?${TQ}&IsActive=is.true&select=ItemID`),
     api(`Coupons?${TQ}&Active=is.true&select=CouponCode`),
     api(`GiftCards?${TQ}&select=BalanceAmount`)
@@ -208,10 +218,9 @@ async function dash(){
 /* ---------- ORDERS LIST ---------- */
 let O_SEARCH="",O_STATUS="";
 async function orders(){
-  let q=`OrderHeader?${TQ}&select=*&order=OrderDate.desc`;
-  if(O_STATUS) q+=`&OrderStatus=eq.${O_STATUS}`;
-  const rows=await api(q);
+  const rows=await api(`OrderHeader?${TQ}&select=*&order=OrderDate.desc`);
   const f=rows.filter(o=>{
+    if(O_STATUS && ostat(o)!==O_STATUS) return false;
     if(!O_SEARCH) return true;
     const s=O_SEARCH.toLowerCase();
     return [o.OrderNumber,o.ShippingName,o.CustomerID,o.ShippingZip,o.ShippingCity]
@@ -240,7 +249,7 @@ async function orders(){
         <td>${esc(o.OccasionCode)}</td>
         <td><b>${money(o.Total)}</b></td>
         <td>${money(o.BalanceDue)}</td>
-        <td><span class="pill ${esc(o.OrderStatus||"NEW")}">${esc(o.OrderStatus||"NEW")}</span></td>
+        <td><span class="pill ${ostat(o)}">${ostat(o)}</span></td>
       </tr>`).join(""):'<tr><td colspan="10" style="color:var(--muted);padding:24px">No orders yet. Place one on the storefront.</td></tr>'}
       </tbody></table>
   </div>`;
@@ -261,7 +270,7 @@ async function orderDetail(num){
   <div class="bar">
     <button onclick="openEdit('orderhdr',${o.id})">Edit order</button>
     ${["APPROVED","PRINTED","SHIPPED","BILLED"].map(s=>`<button class="sec" onclick="setStatus('${esc(num)}','${s}')">Mark ${s}</button>`).join("")}
-    <span class="pill ${esc(o.OrderStatus||"NEW")}">${esc(o.OrderStatus||"NEW")}</span>
+    <span class="pill ${ostat(o)}">${ostat(o)}</span>
   </div>
   <div class="grid2">
     <div class="panel"><h3>Delivery</h3><table>
@@ -272,7 +281,9 @@ async function orderDetail(num){
       ${row("Occasion",esc(o.OccasionCode))}
       ${row("Destination",esc(o.DestinationType))}
       ${row("Ship method",'<span class="mono">'+esc(o.ShipMethodID)+'</span>')}
-      ${row("Card message",esc(o.HeaderMemo1))}
+      ${row("Card message",esc((d[0]||{}).CardMessage))}
+      ${row("Delivery instructions",esc(o.CustomerComments))}
+      ${row("Requested time",esc(o.txtDELIVERYTIME))}
     </table></div>
     <div class="panel"><h3>Money</h3><table>
       ${row("Subtotal",money(o.Subtotal))}
@@ -285,7 +296,9 @@ async function orderDetail(num){
       ${row("<b>Total</b>","<b>"+money(o.Total)+"</b>")}
       ${row("Gift card",esc(o.GiftCertificate)+" &minus;"+money(o.AmountPaid))}
       ${row("Balance due","<b>"+money(o.BalanceDue)+"</b>")}
-      ${row("Payment",esc(o.PaymentMethodID))}
+      ${row("Payment method",esc(o.PaymentMethodID))}
+      ${row("Card",esc(o.CreditCardTypeID)+" "+esc(o.CreditCardNumber||""))}
+      ${row("Auth code",'<span class="mono">'+esc(o.CreditCardApprovalNumber||"—")+'</span>')}
     </table></div>
   </div>
   <div class="panel"><h3>Lines (OrderDetail)</h3>
@@ -298,9 +311,13 @@ async function orderDetail(num){
       </tr>`).join("")}</tbody></table></div>`;
 }
 async function setStatus(num,s){
-  const flags={APPROVED:{Approved:true},PRINTED:{Printed:true},SHIPPED:{Shipped:true},BILLED:{Billed:true}};
+  // legacy: status IS the bit flags. No OrderStatus column exists.
+  const flags={APPROVED:{Approved:true,ApprovedBy:"admin",ApprovedDate:new Date().toISOString()},
+               PRINTED:{Printed:true,CardPrint:true},
+               SHIPPED:{Shipped:true},
+               BILLED:{Billed:true,Invoiced:true}};
   await api(`OrderHeader?OrderNumber=eq.${encodeURIComponent(num)}`,{method:"PATCH",
-    headers:{Prefer:"return=minimal"},body:JSON.stringify({OrderStatus:s,...flags[s]})});
+    headers:{Prefer:"return=minimal"},body:JSON.stringify(flags[s])});
   orderDetail(num);
 }
 
@@ -615,7 +632,7 @@ function renderTokens(tplHtml, subject, o, lines){
     "{{Subtotal}}":money2(o.Subtotal),"{{Discount}}":money2(o.DiscountAmount),
     "{{Freight}}":money2(o.Freight),"{{TaxAmount}}":money2(o.TaxAmount),
     "{{Total}}":money2(o.Total),"{{BalanceDue}}":money2(o.BalanceDue),
-    "{{CardMessage}}":esc(o.HeaderMemo1)
+    "{{CardMessage}}":esc((lines[0]||{}).CardMessage)   // legacy: card message lives on OrderDetail
   };
   let body=tplHtml||"", subj=subject||"";
   for(const k in map){
