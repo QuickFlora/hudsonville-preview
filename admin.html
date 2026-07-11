@@ -5,13 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>QuickFlora X — Back Office</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- GrapesJS: modern drag-and-drop WYSIWYG.
-     newsletter preset -> email-safe table HTML for confirmations
-     webpage preset    -> rich HTML for content pages -->
+<!-- GrapesJS (modern drag-and-drop WYSIWYG) is loaded lazily at runtime by ensureGrapes().
+     Static <script src> tags are NOT used: some static hosts (e.g. htmlpreview) inject the
+     document without executing external scripts. Dynamically-created scripts always execute. -->
 <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.7/dist/css/grapes.min.css">
-<script src="https://unpkg.com/grapesjs@0.21.7/dist/grapes.min.js"></script>
-<script src="https://unpkg.com/grapesjs-preset-newsletter@1.0.2/dist/index.js"></script>
-<script src="https://unpkg.com/grapesjs-preset-webpage@1.0.3/dist/index.js"></script>
 <style>
 :root{--bg:#f6f7f9;--panel:#fff;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;
       --brand:#2f5d4e;--brand-d:#244a3e;--accent:#c76b73;--ok:#0f7b4f;--warn:#b45309;--bad:#b91c1c;--soft:#eef2f0}
@@ -363,7 +360,29 @@ const TOKENS=[
 ];
 let GE=null, TPL=null;
 
+/* lazy-load GrapesJS + presets at runtime (works on any static host) */
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src=src; s.onload=res; s.onerror=()=>rej(new Error("Failed to load "+src));
+    document.head.appendChild(s);
+  });
+}
+let GRAPES_READY=null;
+function ensureGrapes(){
+  if(GRAPES_READY) return GRAPES_READY;
+  GRAPES_READY=(async()=>{
+    if(typeof grapesjs==="undefined")
+      await loadScript("https://unpkg.com/grapesjs@0.21.7/dist/grapes.min.js");
+    await loadScript("https://unpkg.com/grapesjs-preset-newsletter@1.0.2/dist/index.js");
+    await loadScript("https://unpkg.com/grapesjs-preset-webpage@1.0.3/dist/index.js");
+  })();
+  return GRAPES_READY;
+}
+
 async function emailBuilder(){
+  M.innerHTML='<div class="panel">Loading editor…</div>';
+  await ensureGrapes();
   const rows=await api(`EmailTemplates?${TQ}&select=*&order=RowID`);
   TPL=rows[0]||null;
   M.innerHTML=`<h2>Email templates</h2>
@@ -425,6 +444,8 @@ async function saveTemplate(){
 /* ---------- CONTENT PAGE WYSIWYG (webpage preset) ---------- */
 let PG=null, PGE=null;
 async function pageBuilder(){
+  M.innerHTML='<div class="panel">Loading editor…</div>';
+  await ensureGrapes();
   const rows=await api(`ContentLinks?${TQ}&select=*&order=SortOrder`);
   PG=rows[0]||null;
   M.innerHTML=`<h2>Content pages</h2>
