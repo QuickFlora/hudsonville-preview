@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Hudsonville Floral &amp; Gift Shop — Live Storefront (QuickFlora)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--serif:'Marcellus',serif;--sans:'Jost',sans-serif;--green:#2f5d4e;--green-d:#244a3e;--rose:#c76b73;--ink:#26302c;--muted:#7f867f;--line:#e9e6df;--soft:#f2efe8}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);color:var(--ink);font-size:14px;background:#fff}
+.wrap{max-width:1240px;margin:0 auto;padding:0 26px}
+a{color:inherit;text-decoration:none;cursor:pointer}
+img{max-width:100%;display:block}
+.pv{background:var(--ink);color:#fff;text-align:center;font-size:12.5px;padding:7px 12px}
+.pv b{color:#ffd7b0}
+.strip{background:var(--green);color:#eaf2ec;text-align:center;font-size:12.5px;padding:8px}
+.hdr{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:40}
+.hdr .wrap{display:flex;align-items:center;justify-content:space-between;height:84px;gap:20px}
+.brand{font-family:var(--serif);font-size:25px;color:var(--green);cursor:pointer;line-height:1.1}
+.brand small{display:block;font-family:var(--sans);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.menu{display:flex;gap:18px;list-style:none;margin:0;padding:0;text-transform:uppercase;letter-spacing:.07em;font-size:12.5px;font-weight:500;flex-wrap:wrap}
+.menu li{position:relative;padding:30px 0}
+.drop{position:absolute;top:74px;left:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 40px rgba(40,60,50,.14);padding:10px;min-width:230px;display:none;text-transform:none;letter-spacing:0;font-weight:400;z-index:50;max-height:60vh;overflow:auto}
+.menu li:hover .drop{display:block}
+.drop a{display:block;padding:7px 8px;border-radius:7px;font-size:13.5px}
+.drop a:hover{background:var(--soft);color:var(--green)}
+.icons{display:flex;gap:14px;align-items:center;white-space:nowrap}
+.cart-btn{background:var(--green);color:#fff;border-radius:30px;padding:9px 16px;font-weight:500;border:none;cursor:pointer;font-family:var(--sans);font-size:13px}
+.btn{display:inline-block;background:var(--rose);color:#fff;font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:13px 26px;border-radius:30px;border:none;cursor:pointer;font-family:var(--sans)}
+.btn:hover{background:var(--green)}
+.btn.ghost{background:var(--soft);color:var(--green)}
+.btn.ghost:hover{background:var(--green);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.phead{padding:22px 0 6px}
+.phead h1{font-family:var(--serif);font-weight:400;font-size:36px;margin:6px 0}
+.eb{font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--rose)}
+.crumb{color:var(--muted);font-size:12.5px;padding:20px 0 0}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;padding:16px 0 60px}
+.card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.card .im{aspect-ratio:1/1;background:var(--soft);overflow:hidden}
+.card .im img{width:100%;height:100%;object-fit:cover}
+.card .bd{padding:14px;text-align:center;display:flex;flex-direction:column;gap:8px;flex:1}
+.card h4{font-family:var(--serif);font-weight:400;font-size:16px;margin:0}
+.price{color:var(--green);font-weight:600}
+.sel{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;font-family:var(--sans);font-size:13px;background:#fff}
+.content{padding:10px 0 70px}
+.card2{border:1px solid var(--line);border-radius:14px;padding:22px;background:#fff}
+.row{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.row .th{width:92px;height:92px;border-radius:10px;overflow:hidden;background:var(--soft);flex:none}
+.row .th img{width:100%;height:100%;object-fit:cover}
+.row .gr{flex:1}
+.qty{display:flex;align-items:center;gap:8px}
+.qty button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;font-size:16px;line-height:1}
+.qty span{min-width:26px;text-align:center;font-weight:600}
+.lnk{color:var(--rose);font-size:12.5px;cursor:pointer}
+.tot{display:flex;justify-content:space-between;padding:7px 0;font-size:14px}
+.tot.big{font-size:19px;font-weight:600;border-top:1px solid var(--line);margin-top:8px;padding-top:14px;font-family:var(--serif)}
+.two{display:grid;grid-template-columns:1.4fr .9fr;gap:26px;align-items:start}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form .full{grid-column:1/-1}
+label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px}
+input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font-family:var(--sans);font-size:14px;background:#fff}
+textarea{min-height:84px;resize:vertical}
+.fs{font-family:var(--serif);font-size:20px;margin-bottom:14px}
+.note{background:var(--soft);border-radius:10px;padding:12px;font-size:12.5px;color:var(--muted);margin-top:12px}
+.ok{background:#eef7f1;border:1px solid #cfe6d8;border-radius:14px;padding:26px}
+.ok h1{font-family:var(--serif);font-weight:400;margin:8px 0}
+.onum{font-family:var(--serif);font-size:30px;color:var(--green)}
+.err{background:#fdeeee;border:1px solid #f3caca;color:#a33;border-radius:10px;padding:12px;margin:12px 0;font-size:13px}
+.ftr{background:var(--green-d);color:#dfe9e2;margin-top:40px}
+.ftr .wrap{padding:40px 26px;display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}
+.ftr h4{font-family:var(--serif);font-weight:400;color:#fff;font-size:19px;margin:0 0 10px}
+.ftr .cp{border-top:1px solid rgba(255,255,255,.14);text-align:center;padding:16px;font-size:12.5px;color:#a9bdb1}
+.load{padding:70px 0;text-align:center;color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding:9px 6px}
+.tbl td{padding:10px 6px;border-bottom:1px solid var(--line)}
+.dbg{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:#0f1a15;color:#a8e6c4;border-radius:10px;padding:14px;overflow:auto;margin-top:10px;white-space:pre-wrap;word-break:break-all}
+@media(max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.menu{display:none}}
+</style>
+</head>
+<body>
+<div class="pv">LIVE STOREFRONT &middot; <b>wired to database</b> &middot; every cart action &amp; order writes to QuickFlora tables (ItemsCart / OrderHeader / OrderDetail)</div>
+<div class="strip">Same-day delivery in Hudsonville &amp; surrounding areas &middot; <b>616-669-1750</b> &middot; 100% Satisfaction Guarantee</div>
+
+<header class="hdr"><div class="wrap">
+  <div class="brand" onclick="go('home')">Hudsonville Floral<small>&amp; Gift Shop</small></div>
+  <ul class="menu" id="menu"></ul>
+  <div class="icons">
+    <a class="lnk" onclick="go('lookup')">Track order</a>
+    <button class="cart-btn" onclick="go('cart')">Cart &middot; <span id="badge">0</span></button>
+  </div>
+</div></header>
+
+<main id="app"><div class="load">Loading catalog from database…</div></main>
+
+<footer class="ftr">
+  <div class="wrap">
+    <div><h4>Hudsonville Floral</h4>3497 Kelly Street<br>Hudsonville, Michigan 49426<br><br>616-669-1750<br>hudfloral@gmail.com</div>
+    <div><h4>Data source</h4>Supabase (Postgres)<br>Tenant HUDSONVILLE-49<br>243 live products</div>
+    <div><h4>Tables written</h4>ItemsCart<br>OrderHeader<br>OrderDetail</div>
+  </div>
+  <div class="cp">&copy; 2026 Hudsonville Floral &amp; Gift Shop &middot; Powered by QuickFlora &middot; Live database test storefront</div>
+</footer>
+
+<script>
+/* ---------- QuickFlora / Supabase config ---------- */
+const SB   = "https://lvbewzjjubysbwnzsmfh.supabase.co";
+const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2YmV3empqdWJ5c2J3bnpzbWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MjgxNDEsImV4cCI6MjA5OTMwNDE0MX0.bVzGWmDD74uuIsRz43zwNEMpn2VSS6n5cEjK5Xm860E";
+const CO="HUDSONVILLE-49", DV="DEFAULT", DP="DEFAULT";
+const TAX_PCT = 6.0;          // Michigan
+const DELIVERY_FEE = 14.95;   // Freight
+const H = {apikey:ANON, Authorization:"Bearer "+ANON, "Content-Type":"application/json"};
+
+/* tenant filter used on every query */
+const TQ = `CompanyID=eq.${encodeURIComponent(CO)}&DivisionID=eq.${DV}&DepartmentID=eq.${DP}`;
+
+async function api(path, opts={}){
+  const r = await fetch(SB+"/rest/v1/"+path, {...opts, headers:{...H, ...(opts.headers||{})}});
+  const txt = await r.text();
+  if(!r.ok) throw new Error(r.status+" "+txt);
+  return txt ? JSON.parse(txt) : null;
+}
+const money = n => "$"+Number(n||0).toFixed(2);
+
+/* persistent cart session id */
+function sid(){
+  let s = localStorage.getItem("qf_cart_sid");
+  if(!s){ s = "CART-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8); localStorage.setItem("qf_cart_sid", s); }
+  return s;
+}
+
+/* ---------- state ---------- */
+let ITEMS={}, CATS=[], ASSOC=[], CART=[], LASTERR="";
+
+/* ---------- data loading ---------- */
+async function loadCatalog(){
+  const [items, cats, assoc] = await Promise.all([
+    api(`InventoryItems?${TQ}&IsActive=is.true&select=ItemID,ItemName,ItemDescription,PictureURL,Price,DeluxePrice,PremiumPrice&limit=1000`),
+    api(`InventoryCategories?${TQ}&select=ItemCategoryID,ItemFamilyID,CategoryName,SortOrder&order=SortOrder`),
+    api(`ItemFamilyCategoryAssociation?${TQ}&select=ItemCategoryID,ItemFamilyID,ItemID&limit=2000`)
+  ]);
+  ITEMS={}; items.forEach(i=>ITEMS[i.ItemID]=i);
+  CATS=cats; ASSOC=assoc;
+}
+async function loadCart(){
+  CART = await api(`ItemsCart?CartSessionID=eq.${sid()}&select=*&order=CartLineID`);
+  document.getElementById("badge").textContent = CART.reduce((s,l)=>s+Number(l.OrderQty),0);
+}
+
+/* ---------- cart operations (all hit the database) ---------- */
+async function addToCart(itemId, price, qty){
+  const it = ITEMS[itemId];
+  const existing = CART.find(l=>l.ItemID===itemId && Number(l.ItemUnitPrice)===Number(price));
+  if(existing){
+    await api(`ItemsCart?CartLineID=eq.${existing.CartLineID}`, {method:"PATCH", headers:{Prefer:"return=minimal"},
+      body: JSON.stringify({OrderQty: Number(existing.OrderQty)+qty})});
+  } else {
+    await api("ItemsCart", {method:"POST", headers:{Prefer:"return=minimal"}, body: JSON.stringify({
+      CompanyID:CO, DivisionID:DV, DepartmentID:DP, CartSessionID:sid(),
+      ItemID:itemId, Description:it.ItemName, OrderQty:qty,
+      ItemUnitPrice:Number(price), PictureURL:it.PictureURL
+    })});
+  }
+  await loadCart();
+}
+async function setQty(lineId, q){
+  if(q<1) return removeLine(lineId);
+  await api(`ItemsCart?CartLineID=eq.${lineId}`, {method:"PATCH", headers:{Prefer:"return=minimal"}, body: JSON.stringify({OrderQty:q})});
+  await loadCart(); render();
+}
+async function removeLine(lineId){
+  await api(`ItemsCart?CartLineID=eq.${lineId}`, {method:"DELETE", headers:{Prefer:"return=minimal"}});
+  await loadCart(); render();
+}
+async function clearCart(){
+  await api(`ItemsCart?CartSessionID=eq.${sid()}`, {method:"DELETE", headers:{Prefer:"return=minimal"}});
+  await loadCart(); render();
+}
+
+/* ---------- totals ---------- */
+function totals(withDelivery){
+  const sub = CART.reduce((s,l)=>s+Number(l.OrderQty)*Number(l.ItemUnitPrice),0);
+  const freight = withDelivery ? DELIVERY_FEE : 0;
+  const tax = +(sub * TAX_PCT/100).toFixed(2);
+  return {sub:+sub.toFixed(2), freight, tax, total:+(sub+freight+tax).toFixed(2)};
+}
+
+/* ---------- place order: writes OrderHeader + OrderDetail ---------- */
+async function placeOrder(f){
+  const t = totals(f.destination !== "Store Pickup");
+  const orderNumber = "HUD-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2,5).toUpperCase();
+  const now = new Date().toISOString();
+
+  const header = {
+    CompanyID:CO, DivisionID:DV, DepartmentID:DP,
+    OrderNumber:orderNumber, OrderTypeID:"WEB", TransactionTypeID:"SO",
+    OrderDate:now, SystemDate:now, OrderDueDate:f.deliveryDate ? new Date(f.deliveryDate).toISOString() : null,
+    CustomerID:f.email || "GUEST", EmployeeID:"WEB", EnteredBy:"WEB",
+    CurrencyID:"USD",
+    Subtotal:t.sub, TaxableSubTotal:t.sub, TaxPercent:TAX_PCT, TaxAmount:t.tax,
+    Freight:t.freight, Handling:0, DiscountAmount:0, Total:t.total,
+    ShippingName:(f.first+" "+f.last).trim(), ShippingFirstName:f.first, ShippingLastName:f.last,
+    ShippingAddress1:f.addr1, ShippingAddress2:f.addr2, ShippingCity:f.city,
+    ShippingState:f.state, ShippingZip:f.zip, ShippingCountry:"USA",
+    ShippingPhone:f.phone, ShippingAttention:f.attention,
+    OccasionCode:f.occasion, DestinationType:f.destination, Priority:"Standard",
+    PaymentMethodID:"TEST-NO-CARD", AmountPaid:0, BalanceDue:t.total,
+    HeaderMemo1:(f.cardMessage||"").slice(0,50),
+    Approved:false, Printed:false, Shipped:false, Billed:false, Invoiced:false, Posted:false
+  };
+  await api("OrderHeader", {method:"POST", headers:{Prefer:"return=minimal"}, body:JSON.stringify(header)});
+
+  const lines = CART.map((l,idx)=>{
+    const sub = +(Number(l.OrderQty)*Number(l.ItemUnitPrice)).toFixed(2);
+    const tax = +(sub*TAX_PCT/100).toFixed(2);
+    return {
+      CompanyID:CO, DivisionID:DV, DepartmentID:DP, OrderNumber:orderNumber,
+      ItemID:l.ItemID, Description:l.Description,
+      OrderQty:Number(l.OrderQty), ItemUOM:"EA",
+      ItemUnitPrice:Number(l.ItemUnitPrice), OrgItemUnitPrice:Number(l.ItemUnitPrice),
+      SubTotal:sub, TaxPercent:TAX_PCT, TaxAmount:tax, Total:+(sub+tax).toFixed(2),
+      Taxable:true, CurrencyID:"USD", DiscountPerc:0,
+      CardMessage:f.cardMessage, DestinationType:f.destination,
+      DeliveryCharge: idx===0 ? t.freight : 0, ServiceCharge:0,
+      ItemAddTimeStamp:now, LineId:idx+1
+    };
+  });
+  await api("OrderDetail", {method:"POST", headers:{Prefer:"return=minimal"}, body:JSON.stringify(lines)});
+
+  await clearCartSilent();
+  return orderNumber;
+}
+async function clearCartSilent(){
+  await api(`ItemsCart?CartSessionID=eq.${sid()}`, {method:"DELETE", headers:{Prefer:"return=minimal"}});
+  await loadCart();
+}
+
+/* ---------- routing ---------- */
+let ROUTE={page:"home"};
+function go(page, arg){ ROUTE={page, arg}; LASTERR=""; window.scrollTo(0,0); render(); }
+
+/* ---------- views ---------- */
+function menuHtml(){
+  const fam={};
+  CATS.forEach(c=>{ (fam[c.ItemFamilyID]=fam[c.ItemFamilyID]||[]).push(c); });
+  return Object.keys(fam).map(f=>`<li>${f}
+    <div class="drop">${fam[f].map(c=>`<a onclick="go('cat','${c.ItemCategoryID.replace(/'/g,"\\'")}')">${c.CategoryName}</a>`).join("")}</div></li>`).join("");
+}
+function tiles(ids){
+  return `<div class="grid">${ids.map(id=>{
+    const p=ITEMS[id]; if(!p) return "";
+    const opts=[["As shown",p.Price],["Deluxe",p.DeluxePrice],["Premium",p.PremiumPrice]].filter(o=>o[1]!=null);
+    return `<div class="card">
+      <div class="im" onclick="go('item','${id}')"><img loading="lazy" src="${p.PictureURL}" alt="${p.ItemName}"></div>
+      <div class="bd">
+        <h4 onclick="go('item','${id}')">${p.ItemName}</h4>
+        <div class="price">${money(p.Price)}</div>
+        <select class="sel" id="o_${cssId(id)}">${opts.map(o=>`<option value="${o[1]}">${o[0]} — ${money(o[1])}</option>`).join("")}</select>
+        <button class="btn" onclick="addFromCard('${id}')">Add to cart</button>
+      </div></div>`;
+  }).join("")}</div>`;
+}
+const cssId = s => String(s).replace(/[^a-zA-Z0-9_-]/g,"_");
+async function addFromCard(id){
+  const sel=document.getElementById("o_"+cssId(id));
+  try{ await addToCart(id, Number(sel.value), 1); toast("Added to cart"); }
+  catch(e){ alert("Cart write failed: "+e.message); }
+}
+function toast(m){
+  const d=document.createElement("div");
+  d.textContent=m;
+  d.style.cssText="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#2f5d4e;color:#fff;padding:12px 22px;border-radius:30px;z-index:999;font-size:13px";
+  document.body.appendChild(d); setTimeout(()=>d.remove(),1600);
+}
+
+function vHome(){
+  const feat=Object.keys(ITEMS).slice(0,8);
+  return `<div class="wrap"><div class="phead"><div class="eb">Customer favorites</div><h1>Most Popular</h1>
+    <div style="color:var(--muted)">Live catalog — ${Object.keys(ITEMS).length} products read from the <b>InventoryItems</b> table.</div></div>
+    ${tiles(feat)}</div>`;
+}
+function vCat(cat){
+  const ids=ASSOC.filter(a=>a.ItemCategoryID===cat).map(a=>a.ItemID);
+  return `<div class="wrap"><div class="crumb"><a onclick="go('home')">Home</a> / ${cat}</div>
+    <div class="phead"><div class="eb">Shop</div><h1>${cat}</h1><div style="color:var(--muted)">${ids.length} products</div></div>
+    ${ids.length?tiles(ids):'<div class="load">No products in this category.</div>'}</div>`;
+}
+function vItem(id){
+  const p=ITEMS[id]; if(!p) return `<div class="wrap"><div class="load">Item not found.</div></div>`;
+  const opts=[["As shown",p.Price],["Deluxe",p.DeluxePrice],["Premium",p.PremiumPrice]].filter(o=>o[1]!=null);
+  return `<div class="wrap"><div class="crumb"><a onclick="go('home')">Home</a> / ${p.ItemName}</div>
+  <div class="content two">
+    <div class="card2"><img src="${p.PictureURL}" alt="${p.ItemName}" style="border-radius:10px"></div>
+    <div class="card2">
+      <div class="eb">Item ${p.ItemID}</div>
+      <h1 style="font-family:var(--serif);font-weight:400;margin:8px 0">${p.ItemName}</h1>
+      <p style="color:var(--muted)">${p.ItemDescription||""}</p>
+      <label>Size / option</label>
+      <select class="sel" id="o_${cssId(id)}">${opts.map(o=>`<option value="${o[1]}">${o[0]} — ${money(o[1])}</option>`).join("")}</select>
+      <div style="height:12px"></div>
+      <label>Quantity</label>
+      <input type="number" id="qty" value="1" min="1" style="max-width:110px">
+      <div style="height:16px"></div>
+      <button class="btn" onclick="addDetail('${id}')">Add to cart</button>
+    </div></div></div>`;
+}
+async function addDetail(id){
+  const sel=document.getElementById("o_"+cssId(id));
+  const q=Math.max(1, parseInt(document.getElementById("qty").value||"1",10));
+  try{ await addToCart(id, Number(sel.value), q); go('cart'); }
+  catch(e){ alert("Cart write failed: "+e.message); }
+}
+
+function vCart(){
+  if(!CART.length) return `<div class="wrap"><div class="phead"><h1>Your Cart</h1></div>
+    <div class="content"><div class="card2"><p>Your cart is empty.</p>
+    <button class="btn ghost" onclick="go('home')">Browse flowers</button></div></div></div>`;
+  const t=totals(true);
+  return `<div class="wrap"><div class="crumb"><a onclick="go('home')">Home</a> / Cart</div>
+  <div class="phead"><h1>Your Cart</h1><div style="color:var(--muted)">Cart session <b>${sid()}</b> — stored in the <b>ItemsCart</b> table, survives refresh.</div></div>
+  <div class="content two">
+    <div class="card2">
+      ${CART.map(l=>`<div class="row">
+        <div class="th"><img src="${l.PictureURL||""}" alt=""></div>
+        <div class="gr">
+          <div style="font-family:var(--serif);font-size:17px">${l.Description}</div>
+          <div style="color:var(--muted);font-size:12.5px">Item ${l.ItemID} &middot; ${money(l.ItemUnitPrice)} ea &middot; line ${l.CartLineID}</div>
+          <div style="height:8px"></div>
+          <div class="qty">
+            <button onclick="setQty(${l.CartLineID}, ${Number(l.OrderQty)-1})">−</button>
+            <span>${Number(l.OrderQty)}</span>
+            <button onclick="setQty(${l.CartLineID}, ${Number(l.OrderQty)+1})">+</button>
+            <span class="lnk" style="margin-left:12px" onclick="removeLine(${l.CartLineID})">Remove</span>
+          </div>
+        </div>
+        <div style="font-weight:600">${money(Number(l.OrderQty)*Number(l.ItemUnitPrice))}</div>
+      </div>`).join("")}
+      <div style="padding-top:14px"><span class="lnk" onclick="clearCart()">Clear cart</span></div>
+    </div>
+    <div class="card2">
+      <div class="fs">Summary</div>
+      <div class="tot"><span>Subtotal</span><span>${money(t.sub)}</span></div>
+      <div class="tot"><span>Delivery (Freight)</span><span>${money(t.freight)}</span></div>
+      <div class="tot"><span>Tax (${TAX_PCT}%)</span><span>${money(t.tax)}</span></div>
+      <div class="tot big"><span>Total</span><span>${money(t.total)}</span></div>
+      <div style="height:16px"></div>
+      <button class="btn" style="width:100%" onclick="go('checkout')">Checkout</button>
+      <div class="note">Quantity changes, removals and clears are written to <b>ItemsCart</b> immediately.</div>
+    </div></div></div>`;
+}
+
+function vCheckout(){
+  if(!CART.length){ return `<div class="wrap"><div class="load">Your cart is empty. <a class="lnk" onclick="go('home')">Shop</a></div></div>`; }
+  const t=totals(true);
+  const today=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  return `<div class="wrap"><div class="crumb"><a onclick="go('cart')">Cart</a> / Checkout</div>
+  <div class="phead"><h1>Checkout</h1></div>
+  ${LASTERR?`<div class="err">${LASTERR}</div>`:""}
+  <div class="content two">
+    <div class="card2">
+      <div class="fs">Recipient &amp; delivery</div>
+      <div class="form">
+        <div><label>Recipient first name</label><input id="f_first" value="Amy"></div>
+        <div><label>Recipient last name</label><input id="f_last" value="Karsten"></div>
+        <div class="full"><label>Delivery address</label><input id="f_addr1" value="3497 Kelly Street"></div>
+        <div class="full"><label>Address 2</label><input id="f_addr2" placeholder="Apt / suite"></div>
+        <div><label>City</label><input id="f_city" value="Hudsonville"></div>
+        <div><label>State</label><input id="f_state" value="MI"></div>
+        <div><label>ZIP</label><input id="f_zip" value="49426"></div>
+        <div><label>Recipient phone</label><input id="f_phone" value="616-669-1750"></div>
+        <div><label>Delivery date</label><input type="date" id="f_date" value="${today}"></div>
+        <div><label>Destination</label><select id="f_dest">
+          <option>Residence</option><option>Business</option><option>Funeral Home</option>
+          <option>Hospital</option><option>Church</option><option>Store Pickup</option></select></div>
+        <div><label>Occasion</label><select id="f_occ">
+          <option>Birthday</option><option>Anniversary</option><option>Sympathy</option>
+          <option>Get Well</option><option>Just Because</option><option>Wedding</option></select></div>
+        <div><label>Attention</label><input id="f_att" placeholder="Front desk"></div>
+        <div class="full"><label>Card message</label><textarea id="f_msg">Thinking of you today. — The Frost family</textarea></div>
+        <div class="full"><label>Your email (CustomerID)</label><input id="f_email" value="alex@quickflora.com"></div>
+      </div>
+      <div class="note"><b>No card data is collected or stored.</b> Payment is recorded as <code>PaymentMethodID = TEST-NO-CARD</code> with <code>BalanceDue = Total</code>. Card capture belongs in the tokenized gateway, never in the order tables (PCI).</div>
+    </div>
+    <div class="card2">
+      <div class="fs">Order summary</div>
+      ${CART.map(l=>`<div class="tot"><span>${l.Description} × ${Number(l.OrderQty)}</span><span>${money(Number(l.OrderQty)*Number(l.ItemUnitPrice))}</span></div>`).join("")}
+      <div class="tot" style="border-top:1px solid var(--line);margin-top:6px;padding-top:10px"><span>Subtotal</span><span>${money(t.sub)}</span></div>
+      <div class="tot"><span>Delivery</span><span>${money(t.freight)}</span></div>
+      <div class="tot"><span>Tax (${TAX_PCT}%)</span><span>${money(t.tax)}</span></div>
+      <div class="tot big"><span>Total</span><span>${money(t.total)}</span></div>
+      <div style="height:16px"></div>
+      <button class="btn" id="placeBtn" style="width:100%" onclick="submitOrder()">Place order</button>
+      <div class="note">Writes 1 row to <b>OrderHeader</b> and ${CART.length} row(s) to <b>OrderDetail</b>, then empties <b>ItemsCart</b>.</div>
+    </div></div></div>`;
+}
+async function submitOrder(){
+  const btn=document.getElementById("placeBtn");
+  btn.disabled=true; btn.textContent="Writing to database…";
+  const f={
+    first:val("f_first"), last:val("f_last"), addr1:val("f_addr1"), addr2:val("f_addr2"),
+    city:val("f_city"), state:val("f_state"), zip:val("f_zip"), phone:val("f_phone"),
+    deliveryDate:val("f_date"), destination:val("f_dest"), occasion:val("f_occ"),
+    attention:val("f_att"), cardMessage:val("f_msg"), email:val("f_email")
+  };
+  try{
+    const num = await placeOrder(f);
+    go("done", num);
+  }catch(e){
+    LASTERR = "Order failed: "+e.message;
+    btn.disabled=false; btn.textContent="Place order";
+    render();
+  }
+}
+const val = id => (document.getElementById(id)||{}).value || "";
+
+function vDone(num){
+  return `<div class="wrap"><div class="content">
+    <div class="ok">
+      <div class="eb">Order confirmed &amp; saved to database</div>
+      <h1>Thank you!</h1>
+      <div class="onum">${num}</div>
+      <p style="color:var(--muted)">A row was inserted into <b>OrderHeader</b>, its line items into <b>OrderDetail</b>, and <b>ItemsCart</b> was emptied for this session.</p>
+      <button class="btn" onclick="go('lookup','${num}')">Look it up in the database</button>
+      <button class="btn ghost" onclick="go('home')">Keep shopping</button>
+    </div></div></div>`;
+}
+
+function vLookup(pref){
+  return `<div class="wrap"><div class="phead"><div class="eb">Verification</div><h1>Track / verify order</h1>
+    <div style="color:var(--muted)">Reads straight back from <b>OrderHeader</b> + <b>OrderDetail</b>.</div></div>
+    <div class="content"><div class="card2">
+      <div class="form"><div class="full"><label>Order number</label>
+        <input id="lk" value="${pref||""}" placeholder="HUD-…"></div></div>
+      <div style="height:12px"></div>
+      <button class="btn" onclick="doLookup()">Fetch from database</button>
+      <div id="lkout"></div>
+    </div></div></div>`;
+}
+async function doLookup(){
+  const num=val("lk").trim(); const out=document.getElementById("lkout");
+  if(!num){ out.innerHTML='<div class="err">Enter an order number.</div>'; return; }
+  out.innerHTML='<div class="load">Querying database…</div>';
+  try{
+    const h=await api(`OrderHeader?OrderNumber=eq.${encodeURIComponent(num)}&select=*`);
+    if(!h.length){ out.innerHTML='<div class="err">No such order in OrderHeader.</div>'; return; }
+    const d=await api(`OrderDetail?OrderNumber=eq.${encodeURIComponent(num)}&select=*&order=LineId`);
+    const o=h[0];
+    out.innerHTML=`
+      <div style="height:18px"></div>
+      <div class="fs">OrderHeader</div>
+      <table class="tbl"><tbody>
+        ${[["OrderNumber",o.OrderNumber],["OrderDate",o.OrderDate],["OrderDueDate",o.OrderDueDate],
+           ["CustomerID",o.CustomerID],["ShippingName",o.ShippingName],
+           ["Address",[o.ShippingAddress1,o.ShippingAddress2,o.ShippingCity,o.ShippingState,o.ShippingZip].filter(Boolean).join(", ")],
+           ["ShippingPhone",o.ShippingPhone],["OccasionCode",o.OccasionCode],["DestinationType",o.DestinationType],
+           ["Subtotal",money(o.Subtotal)],["Freight",money(o.Freight)],["TaxAmount",money(o.TaxAmount)],
+           ["Total",money(o.Total)],["PaymentMethodID",o.PaymentMethodID],["BalanceDue",money(o.BalanceDue)],
+           ["HeaderMemo1",o.HeaderMemo1]]
+          .map(r=>`<tr><th style="width:190px">${r[0]}</th><td>${r[1]??""}</td></tr>`).join("")}
+      </tbody></table>
+      <div style="height:22px"></div>
+      <div class="fs">OrderDetail (${d.length} line${d.length>1?"s":""})</div>
+      <table class="tbl">
+        <thead><tr><th>Line</th><th>ItemID</th><th>Description</th><th>Qty</th><th>Unit</th><th>SubTotal</th><th>Tax</th><th>Total</th></tr></thead>
+        <tbody>${d.map(l=>`<tr><td>${l.LineId}</td><td>${l.ItemID}</td><td>${l.Description}</td>
+          <td>${Number(l.OrderQty)}</td><td>${money(l.ItemUnitPrice)}</td><td>${money(l.SubTotal)}</td>
+          <td>${money(l.TaxAmount)}</td><td>${money(l.Total)}</td></tr>`).join("")}</tbody>
+      </table>
+      <div class="fs" style="margin-top:22px">Card message (OrderDetail.CardMessage)</div>
+      <div class="note">${(d[0]&&d[0].CardMessage)||"—"}</div>
+      <div class="dbg">GET ${SB}/rest/v1/OrderHeader?OrderNumber=eq.${num}\n${JSON.stringify(o,null,1)}</div>`;
+  }catch(e){ out.innerHTML='<div class="err">'+e.message+'</div>'; }
+}
+
+/* ---------- render ---------- */
+function render(){
+  const a=document.getElementById("app");
+  const p=ROUTE.page;
+  a.innerHTML = p==="home"?vHome() : p==="cat"?vCat(ROUTE.arg) : p==="item"?vItem(ROUTE.arg)
+    : p==="cart"?vCart() : p==="checkout"?vCheckout() : p==="done"?vDone(ROUTE.arg)
+    : p==="lookup"?vLookup(ROUTE.arg) : vHome();
+}
+
+/* ---------- boot ---------- */
+(async function(){
+  try{
+    await loadCatalog();
+    await loadCart();
+    document.getElementById("menu").innerHTML = menuHtml();
+    render();
+  }catch(e){
+    document.getElementById("app").innerHTML =
+      '<div class="wrap"><div class="err">Could not reach the database: '+e.message+'</div></div>';
+  }
+})();
+</script>
+</body>
+</html>
