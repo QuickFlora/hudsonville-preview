@@ -194,7 +194,7 @@ async function loadAccount(){
     api(`CustomerShipToLocations?${TQ}&CustomerID=eq.${encodeURIComponent(c)}&select=*`),
     api(`OrderHeader?${TQ}&CustomerID=eq.${encodeURIComponent(c)}&select=*&order=OrderDate.desc`),
     api(`InventoryWishList?${TQ}&CustomerID=eq.${encodeURIComponent(c)}&select=*`),
-    rpc("fn_loyalty_balance",{p_co:CO,p_customer:c})
+    Promise.resolve({enabled:false,Points:0,Value:0})   // loyalty is out of scope for now
   ]);
   PROFILE=p[0]||null; ADDRESSES=a; MYORDERS=o; WISH=w; LOYALTY=l;
   applyChrome();
