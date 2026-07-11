@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>QuickFlora X — Back Office</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- GrapesJS: drag-and-drop email builder (newsletter preset emits email-safe table HTML) -->
+<link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.7/dist/css/grapes.min.css">
+<script src="https://unpkg.com/grapesjs@0.21.7/dist/grapes.min.js"></script>
+<script src="https://unpkg.com/grapesjs-preset-newsletter@1.0.2/dist/index.js"></script>
 <style>
 :root{--bg:#f6f7f9;--panel:#fff;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;
       --brand:#2f5d4e;--brand-d:#244a3e;--accent:#c76b73;--ok:#0f7b4f;--warn:#b45309;--bad:#b91c1c;--soft:#eef2f0}
@@ -143,6 +147,7 @@ async function render(){
     if(VIEW==="dash") return dash();
     if(VIEW==="orders") return orders();
     if(VIEW==="reviews") return reviews();
+    if(VIEW==="email") return emailBuilder();
     return grid(GRIDS[VIEW]);
   }catch(e){ M.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
@@ -343,6 +348,120 @@ async function delRow(view,id){
   await api(`${cfg.table}?${cfg.pk}=eq.${id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});
   render();
 }
+/* ================= WYSIWYG EMAIL TEMPLATE BUILDER (GrapesJS newsletter preset) ================= */
+const TOKENS=[
+  ["{{CustomerName}}","Customer name"],["{{OrderNumber}}","Order number"],["{{OrderDate}}","Order date"],
+  ["{{OrderDueDate}}","Delivery date"],["{{ShippingName}}","Recipient"],["{{ShippingAddress1}}","Address"],
+  ["{{ShippingCity}}","City"],["{{ShippingZip}}","ZIP"],["{{OccasionCode}}","Occasion"],
+  ["{{LineItems}}","Line-item table"],["{{Subtotal}}","Subtotal"],["{{Discount}}","Discount"],
+  ["{{Freight}}","Delivery"],["{{TaxAmount}}","Tax"],["{{Total}}","Total"],
+  ["{{BalanceDue}}","Balance due"],["{{CardMessage}}","Card message"]
+];
+let GE=null, TPL=null;
+
+async function emailBuilder(){
+  const rows=await api(`EmailTemplates?${TQ}&select=*&order=RowID`);
+  TPL=rows[0]||null;
+  M.innerHTML=`<h2>Email templates</h2>
+  <div class="sub2">Drag-and-drop builder. Output is email-safe HTML saved to <b>EmailTemplates.Email_Content</b>.</div>
+  <div class="panel">
+    <div class="bar">
+      <select id="tplsel">${rows.map(r=>`<option value="${r.RowID}">${esc(r.Full_Name)}</option>`).join("")}</select>
+      <input id="subj" style="min-width:420px" placeholder="Email subject" value="${esc(TPL?TPL.Email_Subject:"")}">
+      <button onclick="saveTemplate()">Save template</button>
+      <button class="sec" onclick="previewTemplate()">Preview with a real order</button>
+    </div>
+    <div class="note"><b>Merge tokens</b> — click to insert at the cursor:
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">
+        ${TOKENS.map(t=>`<button class="sec" style="padding:4px 8px;font-size:11.5px" onclick="insertToken('${t[0]}')">${t[0]}</button>`).join("")}
+      </div>
+    </div>
+  </div>
+  <div class="panel" style="padding:0"><div id="gjs" style="height:620px"></div></div>
+  <div id="prev"></div>`;
+
+  document.getElementById("tplsel").onchange=e=>{
+    TPL=rows.find(r=>String(r.RowID)===e.target.value);
+    document.getElementById("subj").value=TPL.Email_Subject||"";
+    GE.setComponents(TPL.Email_Content||"");
+  };
+
+  GE=grapesjs.init({
+    container:"#gjs",
+    height:"620px",
+    storageManager:false,
+    plugins:["gjs-preset-newsletter"],
+    pluginsOpts:{"gjs-preset-newsletter":{modalTitleImport:"Import template"}},
+    components: TPL ? TPL.Email_Content : "<div>New template</div>"
+  });
+}
+function insertToken(tok){
+  if(!GE) return;
+  const sel=GE.getSelected();
+  if(sel && sel.is("text")){
+    const cur=sel.get("content")||sel.getEl()?.innerHTML||"";
+    sel.set("content", cur+" "+tok);
+    sel.view && sel.view.render();
+  }else{
+    GE.getWrapper().append(`<div style="padding:4px 0">${tok}</div>`);
+  }
+  toast("Inserted "+tok);
+}
+async function saveTemplate(){
+  if(!GE||!TPL) return;
+  const html=GE.getHtml();
+  const css=GE.getCss();
+  const full=`<style>${css}</style>${html}`;
+  await api(`EmailTemplates?RowID=eq.${TPL.RowID}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({Email_Content:full, Email_Subject:document.getElementById("subj").value,
+                         updated_at:new Date().toISOString()})});
+  toast("Template saved to EmailTemplates");
+}
+
+/* render tokens against a real order so the florist sees exactly what a customer gets */
+function renderTokens(tplHtml, subject, o, lines){
+  const money2=n=>"$"+Number(n||0).toFixed(2);
+  const table=`<table width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px">
+    <tr style="background:#f2efe8"><th align="left">Item</th><th align="center">Qty</th><th align="right">Price</th></tr>
+    ${lines.map(l=>`<tr><td>${esc(l.Description)}</td><td align="center">${Number(l.OrderQty)}</td>
+      <td align="right">${money2(l.SubTotal)}</td></tr>`).join("")}</table>`;
+  const map={
+    "{{CustomerName}}":esc(o.CustomerID),"{{OrderNumber}}":esc(o.OrderNumber),
+    "{{OrderDate}}":(o.OrderDate||"").slice(0,10),"{{OrderDueDate}}":(o.OrderDueDate||"").slice(0,10),
+    "{{ShippingName}}":esc(o.ShippingName),"{{ShippingAddress1}}":esc(o.ShippingAddress1),
+    "{{ShippingCity}}":esc(o.ShippingCity),"{{ShippingZip}}":esc(o.ShippingZip),
+    "{{OccasionCode}}":esc(o.OccasionCode),"{{LineItems}}":table,
+    "{{Subtotal}}":money2(o.Subtotal),"{{Discount}}":money2(o.DiscountAmount),
+    "{{Freight}}":money2(o.Freight),"{{TaxAmount}}":money2(o.TaxAmount),
+    "{{Total}}":money2(o.Total),"{{BalanceDue}}":money2(o.BalanceDue),
+    "{{CardMessage}}":esc(o.HeaderMemo1)
+  };
+  let body=tplHtml||"", subj=subject||"";
+  for(const k in map){
+    const re=new RegExp(k.replace(/[{}]/g,"\\$&"),"g");
+    body=body.replace(re,map[k]); subj=subj.replace(re,String(map[k]).replace(/<[^>]+>/g,""));
+  }
+  return {body,subj};
+}
+async function previewTemplate(){
+  const oh=await api(`OrderHeader?${TQ}&select=*&order=OrderDate.desc&limit=1`);
+  if(!oh.length){document.getElementById("prev").innerHTML='<div class="err">No orders yet — place one on the storefront to preview against real data.</div>';return;}
+  const o=oh[0];
+  const lines=await api(`OrderDetail?OrderNumber=eq.${encodeURIComponent(o.OrderNumber)}&select=*&order=LineId`);
+  const html=GE?`<style>${GE.getCss()}</style>${GE.getHtml()}`:(TPL?TPL.Email_Content:"");
+  const r=renderTokens(html, document.getElementById("subj").value, o, lines);
+  document.getElementById("prev").innerHTML=`
+    <h2 style="margin-top:14px">Preview</h2>
+    <div class="sub2">Rendered against real order <b>${esc(o.OrderNumber)}</b> from the database.</div>
+    <div class="panel">
+      <div style="border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px">
+        <b>Subject:</b> ${esc(r.subj)}<br><span class="sub2">To: ${esc(o.CustomerID)}</span>
+      </div>
+      <iframe id="pvf" style="width:100%;height:560px;border:1px solid var(--line);border-radius:8px;background:#fff"></iframe>
+    </div>`;
+  document.getElementById("pvf").srcdoc=r.body;
+}
+
 function toast(m){const d=document.createElement("div");d.textContent=m;
   d.style.cssText="position:fixed;bottom:20px;right:20px;background:var(--ok);color:#fff;padding:10px 16px;border-radius:8px;z-index:99;font-size:13px";
   document.body.appendChild(d);setTimeout(()=>d.remove(),1400);}

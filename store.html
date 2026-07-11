@@ -118,6 +118,7 @@ textarea{min-height:80px}
   <ul class="menu" id="menu"></ul>
   <div class="icons">
     <a class="lnk" onclick="go('lookup')">Track order</a>
+    <a class="lnk" id="acctlink" onclick="go(AUTH?'account':'signin')">Sign in</a>
     <button class="cart-btn" onclick="go('cart')">Cart &middot; <span id="badge">0</span></button>
   </div>
 </div></header>
@@ -133,6 +134,94 @@ const TQ=`CompanyID=eq.${encodeURIComponent(CO)}&DivisionID=eq.${DV}&DepartmentI
 async function api(p,o={}){const r=await fetch(SB+"/rest/v1/"+p,{...o,headers:{...H,...(o.headers||{})}});
   const t=await r.text(); if(!r.ok) throw new Error(r.status+" "+t); return t?JSON.parse(t):null;}
 async function rpc(fn,args){return api("rpc/"+fn,{method:"POST",body:JSON.stringify(args)});}
+
+/* ================= CUSTOMER ACCOUNTS =================
+   Auth is handled by Supabase Auth (passwords hashed there).
+   The production CustomerInformation.CustomerPassword column is cleartext (P1)
+   and is deliberately NOT replicated or written to here. */
+let AUTH=null, PROFILE=null, ADDRESSES=[], MYORDERS=[], WISH=[], LOYALTY=null, AUTHERR="";
+const CUSTID = () => (AUTH && AUTH.email) ? AUTH.email : "GUEST";
+function saveAuth(a){AUTH=a; a?localStorage.setItem("qf_auth",JSON.stringify(a)):localStorage.removeItem("qf_auth");}
+function loadAuth(){try{AUTH=JSON.parse(localStorage.getItem("qf_auth")||"null");}catch(e){AUTH=null;}}
+
+async function doRegister(){
+  AUTHERR="";
+  const body={email:val("a_email").trim(),password:val("a_pass"),
+              first:val("a_first").trim(),last:val("a_last").trim(),phone:val("a_phone").trim()};
+  const r=await (await fetch(SB+"/functions/v1/register",{method:"POST",
+    headers:{apikey:ANON,"Content-Type":"application/json"},body:JSON.stringify(body)})).json();
+  if(!r.ok){AUTHERR=r.error;return render();}
+  await doLogin(body.email, body.password);
+}
+async function doLogin(email,password){
+  AUTHERR="";
+  email = email || val("a_email").trim(); password = password || val("a_pass");
+  const t=await (await fetch(SB+"/auth/v1/token?grant_type=password",{method:"POST",
+    headers:{apikey:ANON,"Content-Type":"application/json"},
+    body:JSON.stringify({email,password})})).json();
+  if(!t.access_token){AUTHERR=t.error_description||t.msg||"Email or password is incorrect.";return render();}
+  saveAuth({email:t.user.email,token:t.access_token,uid:t.user.id});
+  // real QuickFlora table: session -> customer mapping
+  await api("CartLoginLogout",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({
+    SessionBrowserID:sid(),LoginLogOutValue:"LOGIN",CustomerID:AUTH.email,
+    CustomerName:AUTH.email,CompanyWebURL:COMPANY.CompanyWebAddress||""})});
+  await loadAccount();
+  go("account");
+}
+async function doLogout(){
+  if(AUTH) await api("CartLoginLogout",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({
+    SessionBrowserID:sid(),LoginLogOutValue:"LOGOUT",CustomerID:AUTH.email,CustomerName:AUTH.email})});
+  saveAuth(null); PROFILE=null; ADDRESSES=[]; MYORDERS=[]; WISH=[]; LOYALTY=null;
+  applyChrome(); go("home");
+}
+async function loadAccount(){
+  if(!AUTH) return;
+  const c=CUSTID();
+  const [p,a,o,w,l]=await Promise.all([
+    api(`CustomerInformation?${TQ}&CustomerID=eq.${encodeURIComponent(c)}&select=*`),
+    api(`CustomerShipToLocations?${TQ}&CustomerID=eq.${encodeURIComponent(c)}&select=*`),
+    api(`OrderHeader?${TQ}&CustomerID=eq.${encodeURIComponent(c)}&select=*&order=OrderDate.desc`),
+    api(`InventoryWishList?${TQ}&CustomerID=eq.${encodeURIComponent(c)}&select=*`),
+    rpc("fn_loyalty_balance",{p_co:CO,p_customer:c})
+  ]);
+  PROFILE=p[0]||null; ADDRESSES=a; MYORDERS=o; WISH=w; LOYALTY=l;
+  applyChrome();
+}
+async function saveProfile(){
+  await api(`CustomerInformation?${TQ}&CustomerID=eq.${encodeURIComponent(CUSTID())}`,
+    {method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({
+      CustomerFirstName:val("p_first"),CustomerLastName:val("p_last"),
+      CustomerPhone:val("p_phone"),CustomerAddress1:val("p_addr1"),
+      CustomerCity:val("p_city"),CustomerState:val("p_state"),CustomerZip:val("p_zip")})});
+  await loadAccount(); toast("Profile saved"); render();
+}
+async function saveAddress(){
+  const r=await rpc("fn_save_shipto",{p_co:CO,p_dv:DV,p_dp:DP,p_customer:CUSTID(),p_addr:{
+    ShipToName:val("s_name"),ShipToAddress1:val("s_addr1"),ShipToCity:val("s_city"),
+    ShipToState:val("s_state"),ShipToZip:val("s_zip"),ShipToPhone:val("s_phone")}});
+  if(!r.ok) return alert(r.error);
+  await loadAccount(); toast("Address saved"); render();
+}
+async function delAddress(id){
+  await api(`CustomerShipToLocations?id=eq.${id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});
+  await loadAccount(); render();
+}
+async function toggleWish(itemId){
+  if(!AUTH){go("signin");return;}
+  const ex=WISH.find(w=>w.ItemID===itemId);
+  if(ex) await api(`InventoryWishList?id=eq.${ex.id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});
+  else await api("InventoryWishList",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({
+    CompanyID:CO,DivisionID:DV,DepartmentID:DP,ItemID:itemId,CustomerID:CUSTID(),WishQuantity:1})});
+  await loadAccount(); toast(ex?"Removed from wishlist":"Saved to wishlist"); render();
+}
+function useAddress(i){
+  const a=ADDRESSES[i];
+  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.value=v||"";};
+  set("f_first",(a.ShipToName||"").split(" ")[0]); set("f_last",(a.ShipToName||"").split(" ").slice(1).join(" "));
+  set("f_addr1",a.ShipToAddress1); set("f_city",a.ShipToCity); set("f_state",a.ShipToState);
+  set("f_zip",a.ShipToZip); set("f_phone",a.ShipToPhone);
+  refreshQuote();
+}
 
 let COMPANY={},HOME={},SEO={},THEME={},SLIDES=[],TILES=[],LINKS=[],ADDONS=[],ADDONMAP=[],
     ITEMS={},CATS=[],ASSOC=[],REVIEWS=[],OCCASIONS=[],SHIPS=[],CART=[],PICKED={},
@@ -323,7 +412,9 @@ function vItem(id){const p=ITEMS[id];if(!p)return `<div class="wrap"><div class=
     <p style="color:var(--muted)">${p.ItemDescription||""}</p>
     <label>Size / option</label><select class="sel" id="o_${cssId(id)}">${o.map(x=>`<option value="${x[1]}">${x[0]} — ${money(x[1])}</option>`).join("")}</select>
     <div style="height:12px"></div><label>Quantity</label><input type="number" id="qty" value="1" min="1" style="max-width:110px">
-    <div style="height:16px"></div><button class="btn" onclick="addDetail('${esc(id)}')">Add to cart</button></div></div>
+    <div style="height:16px"></div><button class="btn" onclick="addDetail('${esc(id)}')">Add to cart</button>
+    <button class="btn ghost" onclick="toggleWish('${esc(id)}')">${WISH.some(w=>w.ItemID===id)?"♥ In wishlist":"♡ Save to wishlist"}</button>
+    </div></div>
   <div class="content"><div class="card2"><div class="fs">Customer reviews</div>
     ${rv.length?rv.map(r=>`<div class="rev"><div class="stars">${stars(r.Rating)}</div><b>${r.ReviewBy}</b><div>${r.Review}</div></div>`).join(""):'<p style="color:var(--muted)">No approved reviews yet.</p>'}
     ${PENDING?`<div class="pend">${PENDING}</div>`:""}
@@ -387,6 +478,11 @@ function vCheckout(){
       </label>`).join("")}
     <div style="height:20px"></div>
     <div class="fs">Recipient &amp; delivery</div>
+    ${AUTH&&ADDRESSES.length?`<label>Use a saved recipient</label>
+      <select class="sel" onchange="if(this.value!=='')useAddress(this.value)">
+        <option value="">— choose from your address book —</option>
+        ${ADDRESSES.map((a,i)=>`<option value="${i}">${a.ShipToName} — ${a.ShipToCity} ${a.ShipToZip}</option>`).join("")}
+      </select><div style="height:14px"></div>`:''}
     <div class="form">
       <div><label>First name</label><input id="f_first" value="Amy"></div>
       <div><label>Last name</label><input id="f_last" value="Karsten"></div>
@@ -398,8 +494,11 @@ function vCheckout(){
       <div><label>Delivery date</label><input type="date" id="f_date" value="${tmr}" onchange="refreshQuote()"></div>
       <div><label>Occasion</label><select id="f_occ">${OCCASIONS.map(o=>`<option>${o.OccasionDesc}</option>`).join("")}</select></div>
       <div class="full"><label>Card message</label><textarea id="f_msg">Thinking of you today. — The Frost family</textarea></div>
-      <div class="full"><label>Your email</label><input id="f_email" value="alex@quickflora.com"></div>
+      <div class="full"><label>Your email</label><input id="f_email" value="${AUTH?AUTH.email:'alex@quickflora.com'}" ${AUTH?'readonly':''}></div>
     </div>
+    ${AUTH?`<label class="addon" style="text-transform:none;letter-spacing:0;color:var(--ink)">
+      <input type="checkbox" id="f_savead"><span>Save this recipient to my address book</span></label>`
+      :`<div class="note"><span class="lnk" onclick="go('signin')">Sign in</span> to save recipients, see order history and earn loyalty points.</div>`}
     ${QUOTE?(QUOTE.serviceable
       ? `<div class="okmsg">Delivering to <b>${QUOTE.City||''}</b> — ${money(QUOTE.rate)} (<b>${QUOTE.rate_basis}</b>${QUOTE.CutOffTime?`, cut-off ${QUOTE.CutOffTime}`:''}${QUOTE.after_cutoff?' — after cut-off rate applied':''}${QUOTE.holiday?' — holiday rate applied':''})</div>`
       : `<div class="err">${QUOTE.reason}</div>`):''}
@@ -452,8 +551,14 @@ async function submitOrder(){
       p_addons:Object.keys(PICKED).filter(k=>PICKED[k])
     });
     if(!res.ok){LASTERR=res.error;b.disabled=false;b.textContent="Place order";return render();}
+    const sv=document.getElementById("f_savead");
+    if(AUTH && sv && sv.checked){
+      await rpc("fn_save_shipto",{p_co:CO,p_dv:DV,p_dp:DP,p_customer:CUSTID(),p_addr:{
+        ShipToName:(val("f_first")+" "+val("f_last")).trim(),ShipToAddress1:val("f_addr1"),
+        ShipToCity:val("f_city"),ShipToState:val("f_state"),ShipToZip:val("f_zip"),ShipToPhone:val("f_phone")}});
+    }
     PICKED={};COUPON=null;GIFT=null;QUOTE=null;CPNMSG="";GCMSG="";
-    await loadCart();
+    await loadCart(); if(AUTH) await loadAccount();
     go("done",res);
   }catch(e){LASTERR=e.message;b.disabled=false;b.textContent="Place order";render();}
 }
@@ -499,17 +604,120 @@ async function doLookup(){
       <td>${money(l.ItemUnitPrice)}</td><td>${money(l.SubTotal)}</td></tr>`).join("")}</tbody></table>`;
 }
 
+/* ---------- account views ---------- */
+function vSignIn(){
+  return `<div class="wrap"><div class="phead"><div class="eb">Account</div><h1>Sign in</h1></div>
+  <div class="content two"><div class="card2">
+    ${AUTHERR?`<div class="err">${AUTHERR}</div>`:""}
+    <div class="form">
+      <div class="full"><label>Email</label><input id="a_email" type="email" placeholder="you@example.com"></div>
+      <div class="full"><label>Password</label><input id="a_pass" type="password"></div>
+    </div><div style="height:14px"></div>
+    <button class="btn" onclick="doLogin()">Sign in</button>
+    <div class="note">New here? <span class="lnk" onclick="go('register')">Create an account</span></div>
+  </div>
+  <div class="card2"><div class="fs">Why sign in?</div>
+    <p style="color:var(--muted)">Save recipients to your address book, see your order history, keep a wishlist and earn loyalty points.</p>
+    <div class="note">Passwords are hashed by the identity provider. We never store your password in the customer record.</div>
+  </div></div></div>`;
+}
+function vRegister(){
+  return `<div class="wrap"><div class="phead"><div class="eb">Account</div><h1>Create an account</h1></div>
+  <div class="content two"><div class="card2">
+    ${AUTHERR?`<div class="err">${AUTHERR}</div>`:""}
+    <div class="form">
+      <div><label>First name</label><input id="a_first"></div>
+      <div><label>Last name</label><input id="a_last"></div>
+      <div class="full"><label>Email</label><input id="a_email" type="email"></div>
+      <div class="full"><label>Phone</label><input id="a_phone"></div>
+      <div class="full"><label>Password (min 8 characters)</label><input id="a_pass" type="password"></div>
+    </div><div style="height:14px"></div>
+    <button class="btn" onclick="doRegister()">Create account</button>
+    <div class="note">Already have an account? <span class="lnk" onclick="go('signin')">Sign in</span></div>
+  </div>
+  <div class="card2"><div class="fs">Your profile</div>
+    <p style="color:var(--muted)">Creates a record in <b>CustomerInformation</b> and subscribes you to order emails
+    (<b>CustomerEmailList</b>). Your password is stored by the identity provider, hashed — never in the customer table.</p>
+  </div></div></div>`;
+}
+function vAccount(){
+  if(!AUTH) return vSignIn();
+  const p=PROFILE||{};
+  return `<div class="wrap"><div class="phead"><div class="eb">Account</div><h1>Hello, ${p.CustomerFirstName||AUTH.email}</h1>
+    <div style="color:var(--muted)">${AUTH.email} &middot; <span class="lnk" onclick="doLogout()">Sign out</span></div></div>
+  <div class="content">
+    ${LOYALTY?`<div class="card2" style="margin-bottom:16px"><b>Loyalty:</b> ${LOYALTY.points} points
+      <span style="color:var(--muted)">(redeemable at ${LOYALTY.Minimumpoints})</span></div>`:""}
+    <div class="two">
+      <div class="card2"><div class="fs">Order history <span style="font-size:12px;color:var(--muted)">(${MYORDERS.length})</span></div>
+        ${MYORDERS.length?`<table class="tbl"><thead><tr><th>Order</th><th>Date</th><th>Deliver to</th><th>Status</th><th>Total</th></tr></thead>
+        <tbody>${MYORDERS.map(o=>`<tr><td class="lnk" onclick="go('lookup','${o.OrderNumber}')">${o.OrderNumber}</td>
+          <td>${(o.OrderDate||"").slice(0,10)}</td><td>${o.ShippingName||""}</td>
+          <td>${o.OrderStatus||"NEW"}</td><td>${money(o.Total)}</td></tr>`).join("")}</tbody></table>`
+        :'<p style="color:var(--muted)">No orders yet.</p>'}
+      </div>
+      <div class="card2"><div class="fs">Your details</div>
+        <div class="form">
+          <div><label>First name</label><input id="p_first" value="${p.CustomerFirstName||""}"></div>
+          <div><label>Last name</label><input id="p_last" value="${p.CustomerLastName||""}"></div>
+          <div class="full"><label>Phone</label><input id="p_phone" value="${p.CustomerPhone||""}"></div>
+          <div class="full"><label>Address</label><input id="p_addr1" value="${p.CustomerAddress1||""}"></div>
+          <div><label>City</label><input id="p_city" value="${p.CustomerCity||""}"></div>
+          <div><label>State</label><input id="p_state" value="${p.CustomerState||""}"></div>
+          <div><label>ZIP</label><input id="p_zip" value="${p.CustomerZip||""}"></div>
+        </div><div style="height:12px"></div>
+        <button class="btn ghost" onclick="saveProfile()">Save profile</button>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+    <div class="two">
+      <div class="card2"><div class="fs">Address book <span style="font-size:12px;color:var(--muted)">(CustomerShipToLocations)</span></div>
+        ${ADDRESSES.length?ADDRESSES.map(a=>`<div class="row"><div class="gr">
+          <b>${a.ShipToName||""}</b><div style="color:var(--muted);font-size:12.5px">
+          ${[a.ShipToAddress1,a.ShipToCity,a.ShipToState,a.ShipToZip].filter(Boolean).join(", ")}</div></div>
+          <span class="lnk" onclick="delAddress(${a.id})">Delete</span></div>`).join("")
+          :'<p style="color:var(--muted)">No saved recipients yet.</p>'}
+        <div style="height:12px"></div>
+        <div class="form">
+          <div class="full"><label>Recipient name</label><input id="s_name"></div>
+          <div class="full"><label>Address</label><input id="s_addr1"></div>
+          <div><label>City</label><input id="s_city"></div>
+          <div><label>State</label><input id="s_state" value="MI"></div>
+          <div><label>ZIP</label><input id="s_zip"></div>
+          <div><label>Phone</label><input id="s_phone"></div>
+        </div><div style="height:12px"></div>
+        <button class="btn ghost" onclick="saveAddress()">Add recipient</button>
+      </div>
+      <div class="card2"><div class="fs">Wishlist <span style="font-size:12px;color:var(--muted)">(InventoryWishList)</span></div>
+        ${WISH.length?WISH.map(w=>{const it=ITEMS[w.ItemID]||{};
+          return `<div class="row"><div class="th"><img src="${it.PictureURL||""}"></div>
+          <div class="gr"><b>${it.ItemName||w.ItemID}</b><div style="color:var(--muted)">${money(it.Price)}</div></div>
+          <span class="lnk" onclick="toggleWish('${esc(w.ItemID)}')">Remove</span></div>`;}).join("")
+          :'<p style="color:var(--muted)">Nothing saved yet.</p>'}
+      </div>
+    </div>
+  </div></div>`;
+}
+
 function render(){
   const p=ROUTE.page,a=document.getElementById("app");
+  const al=document.getElementById("acctlink");
+  if(al) al.textContent = AUTH ? (PROFILE&&PROFILE.CustomerFirstName ? PROFILE.CustomerFirstName : "My account") : "Sign in";
   a.innerHTML=p==="home"?vHome():p==="cat"?vCat(ROUTE.arg):p==="item"?vItem(ROUTE.arg):p==="page"?vPage(ROUTE.arg)
-    :p==="cart"?vCart():p==="checkout"?vCheckout():p==="done"?vDone(ROUTE.arg):p==="lookup"?vLookup(ROUTE.arg):vHome();
+    :p==="cart"?vCart():p==="checkout"?vCheckout():p==="done"?vDone(ROUTE.arg):p==="lookup"?vLookup(ROUTE.arg)
+    :p==="signin"?vSignIn():p==="register"?vRegister():p==="account"?vAccount():vHome();
   if(p==="home"&&SLIDES.length>1){clearInterval(slideTimer);
     slideTimer=setInterval(()=>{if(ROUTE.page!=="home"){clearInterval(slideTimer);return;}
       slideIdx=(slideIdx+1)%SLIDES.length;render();},8000);}
   if(p==="checkout"&&QUOTE===null){refreshQuote();}
 }
-(async function(){try{await loadStore();applyTheme();applyChrome();await loadCart();render();}
-catch(e){document.getElementById("app").innerHTML='<div class="wrap"><div class="err">Could not load: '+e.message+'</div></div>';}})();
+(async function(){try{
+  loadAuth();
+  await loadStore();applyTheme();applyChrome();
+  await loadCart();
+  if(AUTH) await loadAccount();
+  render();
+}catch(e){document.getElementById("app").innerHTML='<div class="wrap"><div class="err">Could not load: '+e.message+'</div></div>';}})();
 </script>
 </body>
 </html>
