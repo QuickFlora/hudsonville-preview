@@ -230,41 +230,58 @@ function goodsSubtotal(){
              .reduce((s,k)=>s+Number((ADDONS.find(a=>a.AddOnItemID===k)||{}).Price||0),0);
   return +(cart+add).toFixed(2);
 }
-function preview(){
+let TAXCALC={TaxTotal:0,Lines:[]};
+function baseFigures(){
   const sub=goodsSubtotal();
   const disc=COUPON&&COUPON.valid?Number(COUPON.Discount):0;
   const pickup=(SHIPID==='PICKUP');
   const freight=pickup?0:(QUOTE&&QUOTE.serviceable?Number(QUOTE.rate||0):0);
   const service=pickup?0:(QUOTE&&QUOTE.serviceable?Number(QUOTE.ServiceCharge||0):0);
-  const taxbase=(sub-disc)
-    + ((QUOTE&&QUOTE.DeliveryTaxable)?freight:0) + ((QUOTE&&QUOTE.ServiceTaxable)?service:0);
-  const tax=+(taxbase*0.06).toFixed(2);   // preview only — server uses the TaxGroup engine
-  const total=+(sub-disc+freight+service+tax).toFixed(2);
+  const taxbase=+((sub-disc)
+    + ((QUOTE&&QUOTE.DeliveryTaxable)?freight:0)
+    + ((QUOTE&&QUOTE.ServiceTaxable)?service:0)).toFixed(2);
+  return {sub,disc,freight,service,taxbase,pickup};
+}
+/* tax comes from the SAME TaxGroup engine the server uses — not a hardcoded rate,
+   so an admin changing the tax group is reflected in the checkout preview too. */
+async function recalcTax(){
+  const b=baseFigures();
+  TAXCALC=await rpc("fn_calc_tax",{p_co:CO,p_dv:DV,p_dp:DP,p_group:"MI-STD",p_amount:b.taxbase});
+}
+function preview(){
+  const b=baseFigures();
+  const tax=+Number(TAXCALC.TaxTotal||0).toFixed(2);
+  const total=+(b.sub-b.disc+b.freight+b.service+tax).toFixed(2);
   const gc=GIFT&&GIFT.valid?Math.min(Number(GIFT.Balance),total):0;
-  return {sub,disc,freight,service,taxbase,tax,total,gc,due:+(total-gc).toFixed(2),pickup};
+  return {...b,tax,taxLines:TAXCALC.Lines||[],total,gc,due:+(total-gc).toFixed(2)};
 }
 async function refreshQuote(){
   const zip=val("f_zip").trim(), date=val("f_date");
-  if(SHIPID==='PICKUP'){QUOTE={serviceable:true,rate:0,rate_basis:'Store Pickup'};return render();}
-  if(zip.length<5||!date){QUOTE=null;return render();}
-  QUOTE=await rpc("fn_quote_delivery",{p_co:CO,p_dv:DV,p_dp:DP,p_zip:zip,p_date:date});
-  render();
+  if(SHIPID==='PICKUP'){QUOTE={serviceable:true,rate:0,rate_basis:'Store Pickup'};}
+  else if(zip.length<5||!date){QUOTE=null;}
+  else QUOTE=await rpc("fn_quote_delivery",{p_co:CO,p_dv:DV,p_dp:DP,p_zip:zip,p_date:date});
+  await recalcTax(); render();
 }
 async function applyCoupon(){
   const code=val("f_cpn").trim();
-  if(!code){COUPON=null;CPNMSG="";return render();}
-  COUPON=await rpc("fn_validate_coupon",{p_co:CO,p_dv:DV,p_dp:DP,p_code:code,
-                    p_subtotal:goodsSubtotal(),p_date:val("f_date")||new Date().toISOString().slice(0,10)});
-  CPNMSG=COUPON.valid?`Coupon ${COUPON.CouponCode} applied — ${COUPON.description}.`:COUPON.reason;
-  render();
+  if(!code){COUPON=null;CPNMSG="";}
+  else{
+    COUPON=await rpc("fn_validate_coupon",{p_co:CO,p_dv:DV,p_dp:DP,p_code:code,
+                      p_subtotal:goodsSubtotal(),p_date:val("f_date")||new Date().toISOString().slice(0,10)});
+    CPNMSG=COUPON.valid?`Coupon ${COUPON.CouponCode} applied — ${COUPON.description}.`:COUPON.reason;
+  }
+  await recalcTax(); render();
 }
 async function applyGift(){
   const n=val("f_gc").trim();
-  if(!n){GIFT=null;GCMSG="";return render();}
-  GIFT=await rpc("fn_check_giftcard",{p_co:CO,p_dv:DV,p_dp:DP,p_number:n});
-  GCMSG=GIFT.valid?`Gift card ${GIFT.GiftCardNumber} — balance ${money(GIFT.Balance)}.`:GIFT.reason;
+  if(!n){GIFT=null;GCMSG="";}
+  else{
+    GIFT=await rpc("fn_check_giftcard",{p_co:CO,p_dv:DV,p_dp:DP,p_number:n});
+    GCMSG=GIFT.valid?`Gift card ${GIFT.GiftCardNumber} — balance ${money(GIFT.Balance)}.`:GIFT.reason;
+  }
   render();
 }
+async function toggleAddon(id,on){PICKED[id]=on;COUPON=null;CPNMSG="";await recalcTax();render();}
 
 /* ---------- routing/views ---------- */
 let ROUTE={page:"home"},slideIdx=0,slideTimer=null;
@@ -348,7 +365,6 @@ function vCart(){
       <div style="font-weight:600">${money(Number(l.OrderQty)*Number(l.ItemUnitPrice))}</div></div>`).join("")}
     <div style="padding-top:14px"><span class="lnk" onclick="clearCart()">Clear cart</span></div></div>
     <div class="card2"><div class="fs">Summary</div>
-      <div class="tot"><span>Subtotal</span><span>${money(t.sub)}</span></div>
       <div class="tot big"><span>Subtotal</span><span>${money(t.sub)}</span></div>
       <div style="height:12px"></div>
       <button class="btn" style="width:100%" onclick="go('checkout')">Checkout</button>
@@ -402,7 +418,7 @@ function vCheckout(){
 
     ${elig.length?`<div style="height:18px"></div><div class="fs">Add a little extra</div>
       ${elig.map(a=>`<label class="addon" style="text-transform:none;letter-spacing:0;color:var(--ink)">
-      <input type="checkbox" ${PICKED[a.AddOnItemID]?"checked":""} onchange="PICKED['${esc(a.AddOnItemID)}']=this.checked;COUPON=null;render()">
+      <input type="checkbox" ${PICKED[a.AddOnItemID]?"checked":""} onchange="toggleAddon('${esc(a.AddOnItemID)}',this.checked)">
       ${a.ItemFileName?`<img class="ai" src="${a.ItemFileName}">`:`<span class="ai"></span>`}
       <span style="flex:1"><b>${a.AddOnItemName}</b><br><span style="color:var(--muted);font-size:12.5px">${a.AddOnDescription||""}</span></span>
       <b>${money(a.Price)}</b></label>`).join("")}`:''}
