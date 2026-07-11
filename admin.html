@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>QuickFlora X — Back Office</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;
+      --brand:#2f5d4e;--brand-d:#244a3e;--accent:#c76b73;--ok:#0f7b4f;--warn:#b45309;--bad:#b91c1c;--soft:#eef2f0}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+.app{display:flex;min-height:100vh}
+aside{width:230px;background:var(--brand-d);color:#dbe7e1;flex:none;padding:16px 0}
+aside h1{color:#fff;font-size:16px;margin:0 18px 4px}
+aside .sub{font-size:11px;color:#9fb8ac;margin:0 18px 18px}
+aside .grp{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#7e9b8e;margin:16px 18px 6px}
+aside a{display:block;padding:8px 18px;color:#dbe7e1;cursor:pointer;font-size:13.5px;border-left:3px solid transparent}
+aside a:hover{background:rgba(255,255,255,.06)}
+aside a.on{background:rgba(255,255,255,.10);border-left-color:var(--accent);color:#fff;font-weight:600}
+main{flex:1;padding:22px 26px;overflow:auto}
+h2{margin:0 0 4px;font-size:21px}
+.sub2{color:var(--muted);margin-bottom:16px;font-size:13px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+input,select,textarea{padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-family:inherit;font-size:13.5px;background:#fff}
+input[type=checkbox]{width:auto}
+button{padding:8px 14px;border:none;border-radius:7px;background:var(--brand);color:#fff;font-weight:600;cursor:pointer;font-size:13px;font-family:inherit}
+button.sec{background:var(--soft);color:var(--brand)}
+button.danger{background:var(--bad)}
+button:disabled{opacity:.5;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 8px;white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.click:hover{background:var(--soft);cursor:pointer}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.pill.NEW{background:#e0edff;color:#1d4ed8}
+.pill.APPROVED{background:#dcfce7;color:var(--ok)}
+.pill.PRINTED{background:#fef3c7;color:var(--warn)}
+.pill.SHIPPED{background:#ddd6fe;color:#5b21b6}
+.pill.BILLED{background:#e5e7eb;color:#374151}
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.kpi b{display:block;font-size:22px;margin-top:4px}
+.kpi span{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.err{background:#fef2f2;border:1px solid #fecaca;color:var(--bad);padding:10px;border-radius:8px;margin:10px 0}
+.ok2{background:#f0fdf4;border:1px solid #bbf7d0;color:var(--ok);padding:10px;border-radius:8px;margin:10px 0}
+.note{background:var(--soft);border-radius:8px;padding:10px;color:var(--muted);font-size:12.5px}
+label.f{display:block;font-size:11px;text-transform:uppercase;color:var(--muted);margin:8px 0 3px;letter-spacing:.05em}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>QuickFlora X</h1>
+    <div class="sub">Hudsonville Floral · back office</div>
+    <div class="grp">Operations</div>
+    <a data-v="dash">Dashboard</a>
+    <a data-v="orders" class="on">Orders</a>
+    <a data-v="reviews">Reviews (moderation)</a>
+    <a data-v="customers">Customers</a>
+    <div class="grp">Commerce rules</div>
+    <a data-v="tax">Taxes &amp; tax groups</a>
+    <a data-v="zip">Delivery by ZIP</a>
+    <a data-v="ship">Ship methods</a>
+    <a data-v="coupons">Coupons</a>
+    <a data-v="gift">Gift cards</a>
+    <a data-v="occasion">Occasions</a>
+    <div class="grp">Catalog</div>
+    <a data-v="items">Items</a>
+    <a data-v="cats">Categories</a>
+    <a data-v="addons">Add-ons</a>
+    <div class="grp">Website</div>
+    <a data-v="home">Home page</a>
+    <a data-v="theme">Theme (FontsColor)</a>
+    <a data-v="seo">SEO</a>
+    <a data-v="pages">Content pages</a>
+    <a data-v="slider">Sliders</a>
+    <a data-v="email">Email templates</a>
+  </aside>
+  <main id="main"><div class="panel">Loading…</div></main>
+</div>
+
+<script>
+const SB="https://lvbewzjjubysbwnzsmfh.supabase.co";
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2YmV3empqdWJ5c2J3bnpzbWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MjgxNDEsImV4cCI6MjA5OTMwNDE0MX0.bVzGWmDD74uuIsRz43zwNEMpn2VSS6n5cEjK5Xm860E";
+const CO="HUDSONVILLE-49",DV="DEFAULT",DP="DEFAULT";
+const H={apikey:ANON,Authorization:"Bearer "+ANON,"Content-Type":"application/json"};
+const TQ=`CompanyID=eq.${encodeURIComponent(CO)}&DivisionID=eq.${DV}&DepartmentID=eq.${DP}`;
+async function api(p,o={}){const r=await fetch(SB+"/rest/v1/"+p,{...o,headers:{...H,...(o.headers||{})}});
+  const t=await r.text(); if(!r.ok) throw new Error(r.status+" "+t); return t?JSON.parse(t):null;}
+const money=n=>"$"+Number(n||0).toFixed(2);
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const M=document.getElementById("main");
+
+/* ---------- generic CRUD grid, config-driven ---------- */
+const GRIDS={
+  tax:{title:"Taxes",sub:"Individual taxes. TaxGroupDetail below assembles them into groups — TaxOnTax makes a tax compound on the ones before it.",
+       table:"Taxes",pk:"id",cols:["TaxID","TaxDescription","TaxPercent","GLTaxAccount","TaxOrder","Approved"],
+       extra:{title:"Tax group detail (compounding)",table:"TaxGroupDetail",pk:"id",
+              cols:["TaxGroupDetailID","TaxID","Description","TaxPercent","TaxOrder","TaxOnTax","GLTaxAccount"]}},
+  zip:{title:"Delivery by ZIP",sub:"Drives whether we can deliver at all, the rate, and the same-day cut-off. Block = refuse the ZIP.",
+       table:"DeliveryByZip",pk:"id",
+       cols:["Zip","City","State","EveryDayRate","HolidayRate","AfterCutOffRate","CutOffTime","Weekday","Saturday","Sunday","Block"]},
+  ship:{title:"Ship methods",sub:"ShipMethodID is written onto every OrderHeader.",table:"ShipmentMethods",pk:"id",
+        cols:["ShipMethodID","ShipMethodDescription","AllowSameDayDelivery","SpecialDeliveryCharge","Message"]},
+  coupons:{title:"Coupons",sub:"Validated server-side at checkout: active, date window, minimum order, blackout dates, usage limit.",
+        table:"Coupons",pk:"id",
+        cols:["CouponCode","OfferType","CouponCodeRate","MinimumOrderRate","StartDate","EndDate","TotalCouponUsed","TotalToDate","Active"]},
+  gift:{title:"Gift cards",sub:"Balance is decremented server-side on redemption and logged to GiftCardLog.",
+        table:"GiftCards",pk:"id",cols:["GiftCardNumber","Amount","UsedAmount","BalanceAmount","Active","Suspend","ExpiryDate","OrderNumber"]},
+  occasion:{title:"Occasions",sub:"Master list driving OrderHeader.OccasionCode and the checkout dropdown.",
+        table:"Occasion",pk:"id",cols:["OccasionID","OccasionDesc"]},
+  items:{title:"Items",sub:"Catalog. Price / DeluxePrice / PremiumPrice are the only prices checkout will accept.",
+        table:"InventoryItems",pk:"id",cols:["ItemID","ItemName","Price","DeluxePrice","PremiumPrice","IsActive"],limit:60},
+  cats:{title:"Categories",table:"InventoryCategories",pk:"id",cols:["ItemFamilyID","ItemCategoryID","CategoryName","SortOrder"]},
+  addons:{title:"Add-ons",sub:"Associate_AddOn_Items scopes which categories each add-on may appear on.",
+        table:"AddOnItems",pk:"id",cols:["AddOnItemID","AddOnItemName","Price","AddOnDescription","IsActive"]},
+  home:{title:"Home page",table:"HomePageManagement",pk:"id",
+        cols:["FooterMessageHead","FooterMessage","NewWebsitePhoneText","NewWebsitePhoneNumber","Webcolor1","Webcolor2","IsActive"]},
+  theme:{title:"Theme (FontsColor)",sub:"Every colour and font on the storefront.",table:"FontsColor",pk:"id",cols:["PageID","ColorCode","InlineNumber"]},
+  seo:{title:"SEO",table:"SEO",pk:"id",cols:["Title","Metatag","Keywords","Facebooklink","instagram","Pinterest","yelp"]},
+  pages:{title:"Content pages",table:"ContentLinks",pk:"id",cols:["ContentLinkID","ContentLink","ContentText","ContentActive","SortOrder"]},
+  slider:{title:"Sliders",table:"CustomWebsiteSlider",pk:"id",cols:["SliderName","SliderText1","SliderLink","SliderLinkName","SliderImage1","rownumber","Enable"]},
+  email:{title:"Email templates",sub:"Used to render the order confirmation. {{tokens}} are substituted at send time.",
+        table:"EmailTemplates",pk:"RowID",cols:["Full_Name","Email_Subject","Email_Content","Status"]},
+  customers:{title:"Customers",sub:"CustomerInformation. Note: the production cleartext CustomerPassword column is deliberately NOT replicated here.",
+        table:"CustomerInformation",pk:"id",cols:["CustomerID","CustomerFirstName","CustomerLastName","CustomerEmail","CustomerPhone","CustomerCity","CustomerZip"]}
+};
+
+let VIEW="orders";
+document.querySelectorAll("aside a").forEach(a=>a.onclick=()=>{
+  VIEW=a.dataset.v;
+  document.querySelectorAll("aside a").forEach(x=>x.classList.toggle("on",x===a));
+  render();
+});
+
+async function render(){
+  M.innerHTML='<div class="panel">Loading…</div>';
+  try{
+    if(VIEW==="dash") return dash();
+    if(VIEW==="orders") return orders();
+    if(VIEW==="reviews") return reviews();
+    return grid(GRIDS[VIEW]);
+  }catch(e){ M.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+
+/* ---------- DASHBOARD ---------- */
+async function dash(){
+  const [oh,items,cps,gcs] = await Promise.all([
+    api(`OrderHeader?${TQ}&select=OrderNumber,Total,OrderStatus,OrderDate,BalanceDue`),
+    api(`InventoryItems?${TQ}&IsActive=is.true&select=ItemID`),
+    api(`Coupons?${TQ}&Active=is.true&select=CouponCode`),
+    api(`GiftCards?${TQ}&select=BalanceAmount`)
+  ]);
+  const rev=oh.reduce((s,o)=>s+Number(o.Total||0),0);
+  const due=oh.reduce((s,o)=>s+Number(o.BalanceDue||0),0);
+  const liab=gcs.reduce((s,g)=>s+Number(g.BalanceAmount||0),0);
+  M.innerHTML=`<h2>Dashboard</h2><div class="sub2">Live from the database.</div>
+  <div class="kpi">
+    <div><span>Orders</span><b>${oh.length}</b></div>
+    <div><span>Revenue</span><b>${money(rev)}</b></div>
+    <div><span>Outstanding</span><b>${money(due)}</b></div>
+    <div><span>Active products</span><b>${items.length}</b></div>
+    <div><span>Gift card liability</span><b>${money(liab)}</b></div>
+  </div>
+  <div class="panel"><b>Active coupons:</b> ${cps.map(c=>esc(c.CouponCode)).join(", ")||"none"}</div>`;
+}
+
+/* ---------- ORDERS LIST ---------- */
+let O_SEARCH="",O_STATUS="";
+async function orders(){
+  let q=`OrderHeader?${TQ}&select=*&order=OrderDate.desc`;
+  if(O_STATUS) q+=`&OrderStatus=eq.${O_STATUS}`;
+  const rows=await api(q);
+  const f=rows.filter(o=>{
+    if(!O_SEARCH) return true;
+    const s=O_SEARCH.toLowerCase();
+    return [o.OrderNumber,o.ShippingName,o.CustomerID,o.ShippingZip,o.ShippingCity]
+      .some(v=>String(v||"").toLowerCase().includes(s));
+  });
+  M.innerHTML=`<h2>Orders</h2><div class="sub2">Every order placed on the storefront, straight from <b>OrderHeader</b>.</div>
+  <div class="panel">
+    <div class="bar">
+      <input id="q" placeholder="Search order #, recipient, customer, ZIP…" style="min-width:300px" value="${esc(O_SEARCH)}">
+      <select id="st">
+        <option value="">All statuses</option>
+        ${["NEW","APPROVED","PRINTED","SHIPPED","BILLED"].map(s=>`<option ${O_STATUS===s?"selected":""}>${s}</option>`).join("")}
+      </select>
+      <span class="sub2" style="margin:0">${f.length} order(s)</span>
+    </div>
+    <table>
+      <thead><tr><th>Order #</th><th>Date</th><th>Customer</th><th>Recipient</th><th>Deliver to</th>
+        <th>Due date</th><th>Occasion</th><th>Total</th><th>Balance</th><th>Status</th></tr></thead>
+      <tbody>${f.length?f.map(o=>`<tr class="click" data-o="${esc(o.OrderNumber)}">
+        <td class="mono"><b>${esc(o.OrderNumber)}</b></td>
+        <td>${(o.OrderDate||"").slice(0,10)}</td>
+        <td>${esc(o.CustomerID)}</td>
+        <td>${esc(o.ShippingName)}</td>
+        <td>${esc(o.ShippingCity)} ${esc(o.ShippingZip)}</td>
+        <td>${(o.OrderDueDate||"").slice(0,10)}</td>
+        <td>${esc(o.OccasionCode)}</td>
+        <td><b>${money(o.Total)}</b></td>
+        <td>${money(o.BalanceDue)}</td>
+        <td><span class="pill ${esc(o.OrderStatus||"NEW")}">${esc(o.OrderStatus||"NEW")}</span></td>
+      </tr>`).join(""):'<tr><td colspan="10" style="color:var(--muted);padding:24px">No orders yet. Place one on the storefront.</td></tr>'}
+      </tbody></table>
+  </div>`;
+  document.getElementById("q").oninput=e=>{O_SEARCH=e.target.value;orders();};
+  document.getElementById("st").onchange=e=>{O_STATUS=e.target.value;orders();};
+  document.querySelectorAll("tr[data-o]").forEach(tr=>tr.onclick=()=>orderDetail(tr.dataset.o));
+}
+
+async function orderDetail(num){
+  const [h,d]=await Promise.all([
+    api(`OrderHeader?OrderNumber=eq.${encodeURIComponent(num)}&select=*`),
+    api(`OrderDetail?OrderNumber=eq.${encodeURIComponent(num)}&select=*&order=LineId`)
+  ]);
+  const o=h[0];
+  const row=(k,v)=>`<tr><th style="width:190px">${k}</th><td>${v==null?"":v}</td></tr>`;
+  M.innerHTML=`<h2>${esc(num)}</h2>
+  <div class="sub2"><a onclick="orders()" style="color:var(--accent);cursor:pointer">← back to orders</a></div>
+  <div class="bar">
+    ${["APPROVED","PRINTED","SHIPPED","BILLED"].map(s=>`<button class="sec" onclick="setStatus('${esc(num)}','${s}')">Mark ${s}</button>`).join("")}
+    <span class="pill ${esc(o.OrderStatus||"NEW")}">${esc(o.OrderStatus||"NEW")}</span>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Delivery</h3><table>
+      ${row("Recipient",esc(o.ShippingName))}
+      ${row("Address",esc([o.ShippingAddress1,o.ShippingAddress2,o.ShippingCity,o.ShippingState,o.ShippingZip].filter(Boolean).join(", ")))}
+      ${row("Phone",esc(o.ShippingPhone))}
+      ${row("Due date",(o.OrderDueDate||"").slice(0,10))}
+      ${row("Occasion",esc(o.OccasionCode))}
+      ${row("Destination",esc(o.DestinationType))}
+      ${row("Ship method",'<span class="mono">'+esc(o.ShipMethodID)+'</span>')}
+      ${row("Card message",esc(o.HeaderMemo1))}
+    </table></div>
+    <div class="panel"><h3>Money</h3><table>
+      ${row("Subtotal",money(o.Subtotal))}
+      ${row("Discount "+(o.DiscountCouponCode?'('+esc(o.DiscountCouponCode)+')':''),"-"+money(o.DiscountAmount))}
+      ${row("Delivery (Freight)",money(o.Freight))}
+      ${row("Service (Handling)",money(o.Handling))}
+      ${row("Taxable base",money(o.TaxableSubTotal))}
+      ${row("Tax group",'<span class="mono">'+esc(o.TaxGroupID)+'</span> @ '+(o.TaxPercent||0)+'%')}
+      ${row("Tax",money(o.TaxAmount))}
+      ${row("<b>Total</b>","<b>"+money(o.Total)+"</b>")}
+      ${row("Gift card",esc(o.GiftCertificate)+" &minus;"+money(o.AmountPaid))}
+      ${row("Balance due","<b>"+money(o.BalanceDue)+"</b>")}
+      ${row("Payment",esc(o.PaymentMethodID))}
+    </table></div>
+  </div>
+  <div class="panel"><h3>Lines (OrderDetail)</h3>
+    <table><thead><tr><th>#</th><th>ItemID</th><th>Description</th><th>Qty</th><th>Unit</th><th>Subtotal</th><th>Delivery</th></tr></thead>
+    <tbody>${d.map(l=>`<tr><td>${l.LineId}</td><td class="mono">${esc(l.ItemID)}</td><td>${esc(l.Description)}</td>
+      <td>${Number(l.OrderQty)}</td><td>${money(l.ItemUnitPrice)}</td><td>${money(l.SubTotal)}</td>
+      <td>${money(l.DeliveryCharge)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+async function setStatus(num,s){
+  const flags={APPROVED:{Approved:true},PRINTED:{Printed:true},SHIPPED:{Shipped:true},BILLED:{Billed:true}};
+  await api(`OrderHeader?OrderNumber=eq.${encodeURIComponent(num)}`,{method:"PATCH",
+    headers:{Prefer:"return=minimal"},body:JSON.stringify({OrderStatus:s,...flags[s]})});
+  orderDetail(num);
+}
+
+/* ---------- REVIEWS MODERATION ---------- */
+async function reviews(){
+  const rows=await api(`InventoryItemCustomerReviews?${TQ}&select=*&order=ReviewID.desc`);
+  M.innerHTML=`<h2>Reviews</h2><div class="sub2">Only <b>Approved = true</b> rows appear on the storefront.</div>
+  <div class="panel"><table>
+   <thead><tr><th>Item</th><th>By</th><th>Rating</th><th>Review</th><th>Status</th><th></th></tr></thead>
+   <tbody>${rows.map(r=>`<tr>
+     <td class="mono">${esc(r.ItemID)}</td><td>${esc(r.ReviewBy)}</td><td>${"★".repeat(r.Rating||0)}</td>
+     <td>${esc(r.Review)}</td>
+     <td>${r.Approved?'<span class="pill APPROVED">APPROVED</span>':'<span class="pill PRINTED">PENDING</span>'}</td>
+     <td>${r.Approved
+        ? `<button class="danger" onclick="modReview(${r.ReviewID},false)">Un-approve</button>`
+        : `<button onclick="modReview(${r.ReviewID},true)">Approve</button>`}</td></tr>`).join("")}
+   </tbody></table></div>`;
+}
+async function modReview(id,ok){
+  await api(`InventoryItemCustomerReviews?ReviewID=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({Approved:ok,ApprovedBy:ok?"admin":null,ApprovedAt:ok?new Date().toISOString():null})});
+  reviews();
+}
+
+/* ---------- GENERIC EDITABLE GRID ---------- */
+async function grid(cfg,host){
+  const rows=await api(`${cfg.table}?${TQ}&select=*&limit=${cfg.limit||300}`);
+  const html=`<h2>${cfg.title}</h2>${cfg.sub?`<div class="sub2">${cfg.sub}</div>`:'<div class="sub2"></div>'}
+  <div class="panel">
+    <div class="bar"><button onclick="addRow('${VIEW}')">+ New row</button>
+      <span class="sub2" style="margin:0">${rows.length} row(s) · table <b>${cfg.table}</b></span></div>
+    <table><thead><tr>${cfg.cols.map(c=>`<th>${c}</th>`).join("")}<th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>${cfg.cols.map(c=>{
+      const v=r[c];
+      if(typeof v==="boolean"||v===null&&/Active|Enable|Block|Approved|Suspend|Weekday|Saturday|Sunday|TaxOnTax|AllowSameDayDelivery|Status/.test(c))
+        return `<td><input type="checkbox" ${v?"checked":""} onchange="save('${VIEW}',${r[cfg.pk]},'${c}',this.checked)"></td>`;
+      const long=/Content|Message|Description|Metatag|Keywords/.test(c);
+      return `<td>${long
+        ? `<textarea style="width:100%;min-height:52px" onchange="save('${VIEW}',${r[cfg.pk]},'${c}',this.value)">${esc(v)}</textarea>`
+        : `<input style="width:100%" value="${esc(v)}" onchange="save('${VIEW}',${r[cfg.pk]},'${c}',this.value)">`}</td>`;
+    }).join("")}<td><button class="danger" onclick="delRow('${VIEW}',${r[cfg.pk]})">Delete</button></td></tr>`).join("")}
+    </tbody></table>
+    <div class="note">Edits save immediately to <b>${cfg.table}</b> and take effect on the storefront on next load.</div>
+  </div>`;
+  M.innerHTML=html;
+  if(cfg.extra){
+    const er=await api(`${cfg.extra.table}?${TQ}&select=*`);
+    const d=document.createElement("div");
+    d.innerHTML=`<h2 style="margin-top:8px">${cfg.extra.title}</h2>
+    <div class="panel"><table><thead><tr>${cfg.extra.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>
+    <tbody>${er.map(r=>`<tr>${cfg.extra.cols.map(c=>{
+      const v=r[c];
+      if(typeof v==="boolean") return `<td><input type="checkbox" ${v?"checked":""} onchange="saveT('${cfg.extra.table}','${cfg.extra.pk}',${r[cfg.extra.pk]},'${c}',this.checked)"></td>`;
+      return `<td><input style="width:100%" value="${esc(v)}" onchange="saveT('${cfg.extra.table}','${cfg.extra.pk}',${r[cfg.extra.pk]},'${c}',this.value)"></td>`;
+    }).join("")}</tr>`).join("")}</tbody></table>
+    <div class="note"><b>TaxOnTax</b> = this tax compounds on top of the taxes before it (by TaxOrder).</div></div>`;
+    M.appendChild(d);
+  }
+}
+async function save(view,id,col,val){
+  const cfg=GRIDS[view];
+  await api(`${cfg.table}?${cfg.pk}=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({[col]:val===""?null:val})});
+  toast("Saved "+col);
+}
+async function saveT(table,pk,id,col,val){
+  await api(`${table}?${pk}=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({[col]:val===""?null:val})});
+  toast("Saved "+col);
+}
+async function addRow(view){
+  const cfg=GRIDS[view];
+  await api(cfg.table,{method:"POST",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({CompanyID:CO,DivisionID:DV,DepartmentID:DP})});
+  render();
+}
+async function delRow(view,id){
+  const cfg=GRIDS[view];
+  if(!confirm("Delete this row?")) return;
+  await api(`${cfg.table}?${cfg.pk}=eq.${id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});
+  render();
+}
+function toast(m){const d=document.createElement("div");d.textContent=m;
+  d.style.cssText="position:fixed;bottom:20px;right:20px;background:var(--ok);color:#fff;padding:10px 16px;border-radius:8px;z-index:99;font-size:13px";
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1400);}
+
+render();
+</script>
+</body>
+</html>

@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Loading…</title>
 <meta name="description" id="m_desc" content=""/>
-<meta name="keywords" id="m_keys" content=""/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link id="fontlink" rel="stylesheet" href="">
@@ -22,7 +21,7 @@ img{max-width:100%;display:block}
 .strip{background:var(--green);color:#eaf2ec;text-align:center;font-size:12.5px;padding:8px}
 .hdr{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:40}
 .hdr .wrap{display:flex;align-items:center;justify-content:space-between;height:84px;gap:20px}
-.logo{height:58px;width:auto;cursor:pointer}
+.logo{height:58px;cursor:pointer}
 .brand{font-family:var(--serif);font-size:24px;color:var(--green);cursor:pointer}
 .menu{display:flex;gap:18px;list-style:none;margin:0;padding:0;text-transform:uppercase;letter-spacing:.07em;font-size:12.5px;font-weight:500;flex-wrap:wrap}
 .menu li{position:relative;padding:30px 0}
@@ -35,6 +34,7 @@ img{max-width:100%;display:block}
 .btn{display:inline-block;background:var(--rose);color:#fff;font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:13px 26px;border-radius:30px;border:none;cursor:pointer;font-family:var(--sans)}
 .btn:hover{background:var(--green)}
 .btn.ghost{background:var(--soft);color:var(--green)}
+.btn.sm{padding:9px 16px;font-size:12px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .hero{position:relative;min-height:440px;display:flex;align-items:center;color:#fff;overflow:hidden;background:var(--green-d)}
 .hero img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
@@ -44,16 +44,12 @@ img{max-width:100%;display:block}
 .hero p{max-width:440px;line-height:1.8;font-size:15.5px;color:#eef4f0;margin-bottom:26px}
 .eb{font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--rose)}
 .hero .eb{color:#ffd7b0}
-.dots{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3}
-.dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.45);cursor:pointer;display:block}
-.dots i.on{background:#fff}
-/* occasion tiles from CustomWebsiteSliderImagesList */
 .occ{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:44px 0 6px}
 .otile{border-radius:14px;min-height:170px;position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;padding:16px;color:#fff}
 .otile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .otile:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.62))}
 .otile span,.otile h4{position:relative;z-index:2}
-.otile span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.95}
+.otile span{font-size:11px;letter-spacing:.12em;text-transform:uppercase}
 .otile h4{font-family:var(--serif);font-weight:400;font-size:22px;margin:3px 0 0}
 .phead{padding:22px 0 6px}
 .phead h1{font-family:var(--serif);font-weight:400;font-size:36px;margin:6px 0}
@@ -74,51 +70,48 @@ img{max-width:100%;display:block}
 .row .th img{width:100%;height:100%;object-fit:cover}
 .row .gr{flex:1}
 .qty{display:flex;align-items:center;gap:8px}
-.qty button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;font-size:16px;line-height:1}
+.qty button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;font-size:16px}
 .qty span{min-width:26px;text-align:center;font-weight:600}
 .lnk{color:var(--rose);font-size:12.5px;cursor:pointer}
 .tot{display:flex;justify-content:space-between;padding:7px 0;font-size:14px}
 .tot.big{font-size:19px;font-weight:600;border-top:1px solid var(--line);margin-top:8px;padding-top:14px;font-family:var(--serif)}
+.tot.disc{color:var(--green)}
 .two{display:grid;grid-template-columns:1.4fr .9fr;gap:26px;align-items:start}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form .full{grid-column:1/-1}
 label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px}
 input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font-family:var(--sans);font-size:14px;background:#fff}
-textarea{min-height:84px;resize:vertical}
+textarea{min-height:80px}
 .fs{font-family:var(--serif);font-size:20px;margin-bottom:14px}
 .note{background:var(--soft);border-radius:10px;padding:12px;font-size:12.5px;color:var(--muted);margin-top:12px}
-.addon{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-.addon:last-child{border:none}
-.addon input{width:auto;margin:0}
+.addon,.ship{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.addon:last-child,.ship:last-child{border:none}
+.addon input,.ship input{width:auto;margin:0}
 .addon .ai{width:46px;height:46px;border-radius:8px;background:var(--soft);object-fit:cover;flex:none}
-.ship{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-.ship:last-child{border:none}
-.ship input{width:auto;margin:0}
 .stars{color:#e0a537;letter-spacing:2px}
 .rev{border-bottom:1px solid var(--line);padding:12px 0}
-.rev:last-child{border:none}
 .ok{background:#eef7f1;border:1px solid #cfe6d8;border-radius:14px;padding:26px}
 .ok h1{font-family:var(--serif);font-weight:400;margin:8px 0}
 .onum{font-family:var(--serif);font-size:30px;color:var(--green)}
-.err{background:#fdeeee;border:1px solid #f3caca;color:#a33;border-radius:10px;padding:12px;margin:12px 0;font-size:13px}
-.pend{background:#fff8e6;border:1px solid #f0dfae;color:#8a6d1f;border-radius:10px;padding:12px;margin:12px 0;font-size:13px}
+.err{background:#fdeeee;border:1px solid #f3caca;color:#a33;border-radius:10px;padding:12px;margin:10px 0;font-size:13px}
+.okmsg{background:#eef7f1;border:1px solid #cfe6d8;color:#256b4d;border-radius:10px;padding:12px;margin:10px 0;font-size:13px}
+.pend{background:#fff8e6;border:1px solid #f0dfae;color:#8a6d1f;border-radius:10px;padding:12px;margin:10px 0;font-size:13px}
+.inline{display:flex;gap:8px}
+.inline input{flex:1}
 .ftr{background:var(--green-d);color:#dfe9e2;margin-top:40px}
 .ftr .wrap{padding:40px 26px;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:30px}
 .ftr h4{font-family:var(--serif);font-weight:400;color:#fff;font-size:19px;margin:0 0 10px}
 .ftr a{display:block;padding:3px 0;color:#bccfc3}
-.ftr a:hover{color:#fff}
-.soc{display:flex;gap:10px;margin-top:10px}
-.soc a{background:rgba(255,255,255,.1);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
 .cp{border-top:1px solid rgba(255,255,255,.14);text-align:center;padding:16px;font-size:12.5px;color:#a9bdb1}
 .load{padding:70px 0;text-align:center;color:var(--muted)}
-.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
-.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding:9px 6px}
-.tbl td{padding:10px 6px;border-bottom:1px solid var(--line)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 6px}
+.tbl td{padding:9px 6px;border-bottom:1px solid var(--line)}
 @media(max-width:980px){.grid,.occ{grid-template-columns:repeat(2,1fr)}.two,.ftr .wrap{grid-template-columns:1fr}.menu{display:none}}
 </style>
 </head>
 <body>
-<div class="pv">LIVE STOREFRONT &middot; <b>100% driven by the back office</b> &middot; catalog, theme, content, add-on rules, reviews, tax group &amp; ship methods all read from admin tables</div>
+<div class="pv">LIVE STOREFRONT &middot; <b>full back-office parity</b> &middot; tax groups, per-ZIP delivery, coupons, gift cards &amp; orders all enforced server-side</div>
 <div class="strip" id="strip"></div>
 <header class="hdr"><div class="wrap">
   <div id="brandbox" onclick="go('home')"></div>
@@ -128,7 +121,7 @@ textarea{min-height:84px;resize:vertical}
     <button class="cart-btn" onclick="go('cart')">Cart &middot; <span id="badge">0</span></button>
   </div>
 </div></header>
-<main id="app"><div class="load">Loading store configuration from the database…</div></main>
+<main id="app"><div class="load">Loading store configuration…</div></main>
 <footer class="ftr" id="ftr"></footer>
 
 <script>
@@ -139,42 +132,41 @@ const H={apikey:ANON,Authorization:"Bearer "+ANON,"Content-Type":"application/js
 const TQ=`CompanyID=eq.${encodeURIComponent(CO)}&DivisionID=eq.${DV}&DepartmentID=eq.${DP}`;
 async function api(p,o={}){const r=await fetch(SB+"/rest/v1/"+p,{...o,headers:{...H,...(o.headers||{})}});
   const t=await r.text(); if(!r.ok) throw new Error(r.status+" "+t); return t?JSON.parse(t):null;}
+async function rpc(fn,args){return api("rpc/"+fn,{method:"POST",body:JSON.stringify(args)});}
 
 let COMPANY={},HOME={},SEO={},THEME={},SLIDES=[],TILES=[],LINKS=[],ADDONS=[],ADDONMAP=[],
-    TAX={},SHIPS=[],SHIPID="",ITEMS={},CATS=[],ASSOC=[],REVIEWS=[],CART=[],PICKED={},LASTERR="",PENDING="";
+    ITEMS={},CATS=[],ASSOC=[],REVIEWS=[],OCCASIONS=[],SHIPS=[],CART=[],PICKED={},
+    SHIPID="",QUOTE=null,COUPON=null,GIFT=null,LASTERR="",PENDING="",CPNMSG="",GCMSG="";
 
-const cur=()=>COMPANY.CurrencySymbol||"$";
-const money=n=>cur()+Number(n||0).toFixed(2);
-const esc=s=>String(s).replace(/'/g,"\\'");
+const money=n=>"$"+Number(n||0).toFixed(2);
+const esc=s=>String(s==null?"":s).replace(/'/g,"\\'");
 const cssId=s=>String(s).replace(/[^a-zA-Z0-9_-]/g,"_");
+const val=id=>(document.getElementById(id)||{}).value||"";
 function sid(){let s=localStorage.getItem("qf_cart_sid");
   if(!s){s="CART-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);localStorage.setItem("qf_cart_sid",s);}return s;}
 
 async function loadStore(){
-  const [comp,home,seo,fonts,slides,tiles,links,addons,amap,tax,ships,items,cats,assoc,revs]=await Promise.all([
-    api(`Companies?${TQ}&select=*`),
-    api(`HomePageManagement?${TQ}&IsActive=is.true&select=*`),
-    api(`SEO?${TQ}&select=*`),
-    api(`FontsColor?${TQ}&select=PageID,ColorCode&order=InlineNumber`),
-    api(`CustomWebsiteSlider?${TQ}&Enable=is.true&ISActiveSlider=is.true&select=*&order=rownumber`),
-    api(`CustomWebsiteSliderImagesList?${TQ}&select=*&order=rownumber`),          // GAP 2
+  const [comp,home,seo,fonts,slides,tiles,links,addons,amap,items,cats,assoc,revs,occ,ships]=await Promise.all([
+    api(`Companies?${TQ}&select=*`), api(`HomePageManagement?${TQ}&IsActive=is.true&select=*`),
+    api(`SEO?${TQ}&select=*`), api(`FontsColor?${TQ}&select=PageID,ColorCode&order=InlineNumber`),
+    api(`CustomWebsiteSlider?${TQ}&Enable=is.true&select=*&order=rownumber`),
+    api(`CustomWebsiteSliderImagesList?${TQ}&select=*&order=rownumber`),
     api(`ContentLinks?${TQ}&ContentActive=is.true&select=*&order=SortOrder`),
     api(`AddOnItems?${TQ}&IsActive=is.true&select=*`),
-    api(`Associate_AddOn_Items?${TQ}&select=*&limit=2000`),                        // GAP 1
-    api(`TaxGroup?${TQ}&IsActive=is.true&IsDefault=is.true&select=*`),             // GAP 3
-    api(`ShipMethod?${TQ}&IsActive=is.true&select=*&order=SortOrder`),             // GAP 3
+    api(`Associate_AddOn_Items?${TQ}&select=*&limit=2000`),
     api(`InventoryItems?${TQ}&IsActive=is.true&select=ItemID,ItemName,ItemDescription,PictureURL,Price,DeluxePrice,PremiumPrice&limit=1000`),
     api(`InventoryCategories?${TQ}&select=*&order=SortOrder`),
     api(`ItemFamilyCategoryAssociation?${TQ}&select=ItemCategoryID,ItemID&limit=2000`),
-    api(`InventoryItemCustomerReviews?${TQ}&Approved=is.true&select=*`)            // approved only
+    api(`InventoryItemCustomerReviews?${TQ}&Approved=is.true&select=*`),
+    api(`Occasion?${TQ}&select=*&order=OccasionID`),
+    api(`ShipmentMethods?${TQ}&select=*`)
   ]);
-  COMPANY=comp[0]||{}; HOME=home[0]||{}; SEO=seo[0]||{};
-  THEME={}; fonts.forEach(f=>THEME[f.PageID]=f.ColorCode);
-  SLIDES=slides; TILES=tiles.filter(t=>t.SliderImageName); LINKS=links;
-  ADDONS=addons; ADDONMAP=amap; TAX=tax[0]||{}; SHIPS=ships;
-  if(!SHIPID) SHIPID=(SHIPS[0]||{}).ShipMethodID||"";
-  ITEMS={}; items.forEach(i=>ITEMS[i.ItemID]=i);
-  CATS=cats; ASSOC=assoc; REVIEWS=revs;
+  COMPANY=comp[0]||{};HOME=home[0]||{};SEO=seo[0]||{};
+  THEME={};fonts.forEach(f=>THEME[f.PageID]=f.ColorCode);
+  SLIDES=slides;TILES=tiles.filter(t=>t.SliderImageName);LINKS=links;ADDONS=addons;ADDONMAP=amap;
+  ITEMS={};items.forEach(i=>ITEMS[i.ItemID]=i);
+  CATS=cats;ASSOC=assoc;REVIEWS=revs;OCCASIONS=occ;SHIPS=ships;
+  if(!SHIPID) SHIPID=(ships.find(s=>s.ShipMethodID!=='PICKUP')||ships[0]||{}).ShipMethodID||"";
 }
 async function loadCart(){
   CART=await api(`ItemsCart?CartSessionID=eq.${sid()}&select=*&order=CartLineID`);
@@ -185,53 +177,37 @@ function applyTheme(){
   r.setProperty("--green",c("primary",HOME.Webcolor1||"#2f5d4e"));
   r.setProperty("--green-d",c("primary-dark","#244a3e"));
   r.setProperty("--rose",c("accent",HOME.Webcolor2||"#c76b73"));
-  r.setProperty("--ink",c("ink","#26302c")); r.setProperty("--muted",c("muted","#7f867f"));
-  r.setProperty("--line",c("line","#e9e6df")); r.setProperty("--soft",c("soft","#f2efe8"));
+  r.setProperty("--ink",c("ink","#26302c"));r.setProperty("--muted",c("muted","#7f867f"));
+  r.setProperty("--line",c("line","#e9e6df"));r.setProperty("--soft",c("soft","#f2efe8"));
   const hd=THEME.headingFont||"Marcellus",bd=THEME.bodyFont||"Jost";
-  r.setProperty("--serif",`'${hd}',serif`); r.setProperty("--sans",`'${bd}',sans-serif`);
+  r.setProperty("--serif",`'${hd}',serif`);r.setProperty("--sans",`'${bd}',sans-serif`);
   document.getElementById("fontlink").href=
     `https://fonts.googleapis.com/css2?family=${encodeURIComponent(hd)}&family=${encodeURIComponent(bd)}:wght@300;400;500;600&display=swap`;
 }
 function applyChrome(){
   document.title=SEO.Title||COMPANY.CompanyName||"Storefront";
   document.getElementById("m_desc").content=SEO.Metatag||"";
-  document.getElementById("m_keys").content=SEO.Keywords||"";
   document.getElementById("strip").innerHTML=`${HOME.NewWebsitePhoneText||""} &middot; <b>${HOME.NewWebsitePhoneNumber||COMPANY.CompanyPhone||""}</b>`;
-  const lg=COMPANY.CompanyLogoUrl;
-  document.getElementById("brandbox").innerHTML = lg
-    ? `<img class="logo" src="${lg}" alt="${COMPANY.CompanyName||""}">`
-    : `<div class="brand">${COMPANY.CompanyName||""}</div>`;
-  const fam={}; CATS.forEach(c=>{(fam[c.ItemFamilyID]=fam[c.ItemFamilyID]||[]).push(c);});
+  document.getElementById("brandbox").innerHTML=COMPANY.CompanyLogoUrl
+    ? `<img class="logo" src="${COMPANY.CompanyLogoUrl}" alt="">` : `<div class="brand">${COMPANY.CompanyName||""}</div>`;
+  const fam={};CATS.forEach(c=>{(fam[c.ItemFamilyID]=fam[c.ItemFamilyID]||[]).push(c);});
   document.getElementById("menu").innerHTML=Object.keys(fam).map(f=>`<li>${f}
     <div class="drop">${fam[f].map(c=>`<a onclick="go('cat','${esc(c.ItemCategoryID)}')">${c.CategoryName}</a>`).join("")}</div></li>`).join("");
-  const dm=SHIPS.find(s=>Number(s.DeliveryCharge)>0)||{};
   const soc=[["f",SEO.Facebooklink],["in",SEO.instagram],["p",SEO.Pinterest],["y",SEO.yelp]].filter(s=>s[1]);
   document.getElementById("ftr").innerHTML=`<div class="wrap">
     <div><h4>${COMPANY.CompanyName||""}</h4>
-      <div style="line-height:1.9">${(LINKS.find(l=>l.ContentLink==="Contact / Locate Us")||{}).ContentText||""}</div>
-      <div class="soc">${soc.map(s=>`<a href="${s[1]}" target="_blank" rel="noopener">${s[0]}</a>`).join("")}</div></div>
+      <div style="line-height:1.9">${(LINKS.find(l=>l.ContentLink==="Contact / Locate Us")||{}).ContentText||""}</div></div>
     <div><h4>Information</h4>${LINKS.map(l=>`<a onclick="go('page',${l.ContentLinkID})">${l.ContentLink}</a>`).join("")}</div>
-    <div><h4>Delivery</h4><div style="line-height:1.9">
-      ${SHIPS.map(s=>`${s.ShipMethodName} — ${money(s.DeliveryCharge)}`).join("<br>")}<br>
-      Cut-off ${dm.CutOffTime||"—"}<br>Tax ${Number(TAX.TaxPercent||0)}% (${TAX.TaxGroupName||""})</div></div>
-    </div>
+    <div><h4>Delivery</h4><div style="line-height:1.9">${SHIPS.map(s=>s.ShipMethodDescription).join("<br>")}<br>
+      Rates &amp; cut-off vary by ZIP</div></div></div>
     <div class="cp">&copy; 2026 ${COMPANY.CompanyName||""} &middot; Powered by QuickFlora</div>`;
 }
+function cartCategories(){const s=new Set();CART.forEach(l=>ASSOC.filter(a=>a.ItemID===l.ItemID).forEach(a=>s.add(a.ItemCategoryID)));return s;}
+function eligibleAddons(){const c=cartCategories();if(!c.size)return[];
+  const ok=new Set(ADDONMAP.filter(m=>c.has(m.ItemCategoryID)).map(m=>m.AddOnItemID));
+  return ADDONS.filter(a=>ok.has(a.AddOnItemID));}
 
-/* ---- GAP 1: which add-ons are allowed for what's in the cart ---- */
-function cartCategories(){
-  const set=new Set();
-  CART.forEach(l=>ASSOC.filter(a=>a.ItemID===l.ItemID).forEach(a=>set.add(a.ItemCategoryID)));
-  return set;
-}
-function eligibleAddons(){
-  const cats=cartCategories();
-  if(!cats.size) return [];
-  const ok=new Set(ADDONMAP.filter(m=>cats.has(m.ItemCategoryID)).map(m=>m.AddOnItemID));
-  return ADDONS.filter(a=>ok.has(a.AddOnItemID));
-}
-
-/* ---- cart ops ---- */
+/* cart ops */
 async function addToCart(id,price,qty,desc,pic){
   const ex=CART.find(l=>l.ItemID===id&&Number(l.ItemUnitPrice)===Number(price));
   if(ex) await api(`ItemsCart?CartLineID=eq.${ex.CartLineID}`,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({OrderQty:Number(ex.OrderQty)+qty})});
@@ -242,163 +218,130 @@ async function addToCart(id,price,qty,desc,pic){
 }
 async function setQty(id,q){if(q<1)return removeLine(id);
   await api(`ItemsCart?CartLineID=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({OrderQty:q})});
-  await loadCart();render();}
-async function removeLine(id){await api(`ItemsCart?CartLineID=eq.${id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await loadCart();render();}
-async function clearCart(){await api(`ItemsCart?CartSessionID=eq.${sid()}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await loadCart();render();}
+  await loadCart();COUPON=null;render();}
+async function removeLine(id){await api(`ItemsCart?CartLineID=eq.${id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await loadCart();COUPON=null;render();}
+async function clearCart(){await api(`ItemsCart?CartSessionID=eq.${sid()}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await loadCart();COUPON=null;render();}
 
-/* ---- GAP 3: totals from TaxGroup + selected ShipMethod ---- */
-function ship(){ return SHIPS.find(s=>s.ShipMethodID===SHIPID)||SHIPS[0]||{}; }
-function totals(){
-  const s=ship();
-  const cartSub=CART.reduce((a,l)=>a+Number(l.OrderQty)*Number(l.ItemUnitPrice),0);
+/* ---------- totals (client preview; server re-computes authoritatively) ---------- */
+function goodsSubtotal(){
   const elig=eligibleAddons();
-  const addSub=Object.keys(PICKED).filter(k=>PICKED[k]&&elig.some(a=>a.AddOnItemID===k))
-                 .reduce((a,k)=>a+Number((ADDONS.find(x=>x.AddOnItemID===k)||{}).Price||0),0);
-  const sub=+(cartSub+addSub).toFixed(2);
-  const taxPct=Number(TAX.TaxPercent||0);
-  const fee=Number(s.DeliveryCharge||0);
-  const freeOver=Number(s.FreeOverAmount||0);
-  const freight=(freeOver>0&&sub>=freeOver)?0:fee;
-  const taxBase=TAX.TaxFreight?sub+freight:sub;
-  const tax=+(taxBase*taxPct/100).toFixed(2);
-  return {sub,freight,tax,taxPct,freeOver,fee,total:+(sub+freight+tax).toFixed(2),s};
+  const cart=CART.reduce((s,l)=>s+Number(l.OrderQty)*Number(l.ItemUnitPrice),0);
+  const add=Object.keys(PICKED).filter(k=>PICKED[k]&&elig.some(a=>a.AddOnItemID===k))
+             .reduce((s,k)=>s+Number((ADDONS.find(a=>a.AddOnItemID===k)||{}).Price||0),0);
+  return +(cart+add).toFixed(2);
 }
-
-/* ---- order ---- */
-async function placeOrder(f){
-  const t=totals(), num="HUD-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,5).toUpperCase();
-  const now=new Date().toISOString();
-  await api("OrderHeader",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({
-    CompanyID:CO,DivisionID:DV,DepartmentID:DP,OrderNumber:num,OrderTypeID:"WEB",TransactionTypeID:"SO",
-    OrderDate:now,SystemDate:now,OrderDueDate:f.deliveryDate?new Date(f.deliveryDate).toISOString():null,
-    CustomerID:f.email||"GUEST",EmployeeID:"WEB",EnteredBy:"WEB",CurrencyID:"USD",
-    TaxGroupID:TAX.TaxGroupID, ShipMethodID:t.s.ShipMethodID, TaxFreight:!!TAX.TaxFreight,
-    Subtotal:t.sub,TaxableSubTotal:t.sub,TaxPercent:t.taxPct,TaxAmount:t.tax,
-    Freight:t.freight,Handling:0,DiscountAmount:0,Total:t.total,
-    ShippingName:(f.first+" "+f.last).trim(),ShippingFirstName:f.first,ShippingLastName:f.last,
-    ShippingAddress1:f.addr1,ShippingAddress2:f.addr2,ShippingCity:f.city,ShippingState:f.state,
-    ShippingZip:f.zip,ShippingCountry:"USA",ShippingPhone:f.phone,ShippingAttention:f.attention,
-    OccasionCode:f.occasion,DestinationType:f.destination,Priority:"Standard",
-    PaymentMethodID:"TEST-NO-CARD",AmountPaid:0,BalanceDue:t.total,
-    HeaderMemo1:(f.cardMessage||"").slice(0,50),
-    Approved:false,Printed:false,Shipped:false,Billed:false,Invoiced:false,Posted:false})});
-  const mk=(id,d,q,u,i)=>{const sb=+(q*u).toFixed(2),tx=+(sb*t.taxPct/100).toFixed(2);
-    return {CompanyID:CO,DivisionID:DV,DepartmentID:DP,OrderNumber:num,ItemID:id,Description:d,OrderQty:q,
-      ItemUOM:"EA",ItemUnitPrice:u,OrgItemUnitPrice:u,SubTotal:sb,TaxPercent:t.taxPct,TaxAmount:tx,
-      Total:+(sb+tx).toFixed(2),Taxable:true,CurrencyID:"USD",DiscountPerc:0,CardMessage:f.cardMessage,
-      DestinationType:f.destination,DeliveryCharge:i===0?t.freight:0,ServiceCharge:0,ItemAddTimeStamp:now,LineId:i+1};};
-  const lines=CART.map((l,i)=>mk(l.ItemID,l.Description,Number(l.OrderQty),Number(l.ItemUnitPrice),i));
-  const elig=eligibleAddons();
-  Object.keys(PICKED).filter(k=>PICKED[k]&&elig.some(a=>a.AddOnItemID===k)).forEach(k=>{
-    const a=ADDONS.find(x=>x.AddOnItemID===k);
-    lines.push(mk(a.AddOnItemID,a.AddOnItemName+" (add-on)",1,Number(a.Price),lines.length));});
-  await api("OrderDetail",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify(lines)});
-  await api(`ItemsCart?CartSessionID=eq.${sid()}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});
-  PICKED={};await loadCart();return num;
+function preview(){
+  const sub=goodsSubtotal();
+  const disc=COUPON&&COUPON.valid?Number(COUPON.Discount):0;
+  const pickup=(SHIPID==='PICKUP');
+  const freight=pickup?0:(QUOTE&&QUOTE.serviceable?Number(QUOTE.rate||0):0);
+  const service=pickup?0:(QUOTE&&QUOTE.serviceable?Number(QUOTE.ServiceCharge||0):0);
+  const taxbase=(sub-disc)
+    + ((QUOTE&&QUOTE.DeliveryTaxable)?freight:0) + ((QUOTE&&QUOTE.ServiceTaxable)?service:0);
+  const tax=+(taxbase*0.06).toFixed(2);   // preview only — server uses the TaxGroup engine
+  const total=+(sub-disc+freight+service+tax).toFixed(2);
+  const gc=GIFT&&GIFT.valid?Math.min(Number(GIFT.Balance),total):0;
+  return {sub,disc,freight,service,taxbase,tax,total,gc,due:+(total-gc).toFixed(2),pickup};
 }
-
-/* ---- GAP 4: review submission -> Approved=false (awaits admin moderation) ---- */
-async function submitReview(itemId){
-  const by=val("r_by").trim(), txt=val("r_txt").trim(), rating=parseInt(val("r_rate")||"5",10);
-  if(!by||!txt){ PENDING="Please enter your name and a review."; return render(); }
-  await api("InventoryItemCustomerReviews",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({
-    CompanyID:CO,DivisionID:DV,DepartmentID:DP,ItemID:itemId,
-    ReviewID:Date.now(), ReviewBy:by, ReviewDate:new Date().toISOString(),
-    Review:txt, Rating:rating, Approved:false, Helpful:0, Views:0
-  })});
-  PENDING="Thank you — your review was saved and is awaiting approval in the back office. It will not appear on the site until an admin approves it.";
+async function refreshQuote(){
+  const zip=val("f_zip").trim(), date=val("f_date");
+  if(SHIPID==='PICKUP'){QUOTE={serviceable:true,rate:0,rate_basis:'Store Pickup'};return render();}
+  if(zip.length<5||!date){QUOTE=null;return render();}
+  QUOTE=await rpc("fn_quote_delivery",{p_co:CO,p_dv:DV,p_dp:DP,p_zip:zip,p_date:date});
+  render();
+}
+async function applyCoupon(){
+  const code=val("f_cpn").trim();
+  if(!code){COUPON=null;CPNMSG="";return render();}
+  COUPON=await rpc("fn_validate_coupon",{p_co:CO,p_dv:DV,p_dp:DP,p_code:code,
+                    p_subtotal:goodsSubtotal(),p_date:val("f_date")||new Date().toISOString().slice(0,10)});
+  CPNMSG=COUPON.valid?`Coupon ${COUPON.CouponCode} applied — ${COUPON.description}.`:COUPON.reason;
+  render();
+}
+async function applyGift(){
+  const n=val("f_gc").trim();
+  if(!n){GIFT=null;GCMSG="";return render();}
+  GIFT=await rpc("fn_check_giftcard",{p_co:CO,p_dv:DV,p_dp:DP,p_number:n});
+  GCMSG=GIFT.valid?`Gift card ${GIFT.GiftCardNumber} — balance ${money(GIFT.Balance)}.`:GIFT.reason;
   render();
 }
 
-let ROUTE={page:"home"};
+/* ---------- routing/views ---------- */
+let ROUTE={page:"home"},slideIdx=0,slideTimer=null;
 function go(p,a){ROUTE={page:p,arg:a};LASTERR="";PENDING="";window.scrollTo(0,0);render();}
-const val=id=>(document.getElementById(id)||{}).value||"";
-
 function tiles(ids){return `<div class="grid">${ids.map(id=>{const p=ITEMS[id];if(!p)return"";
   const o=[["As shown",p.Price],["Deluxe",p.DeluxePrice],["Premium",p.PremiumPrice]].filter(x=>x[1]!=null);
-  return `<div class="card"><div class="im" onclick="go('item','${esc(id)}')"><img loading="lazy" src="${p.PictureURL}" alt="${p.ItemName}"></div>
+  return `<div class="card"><div class="im" onclick="go('item','${esc(id)}')"><img loading="lazy" src="${p.PictureURL}" alt=""></div>
     <div class="bd"><h4 onclick="go('item','${esc(id)}')">${p.ItemName}</h4><div class="price">${money(p.Price)}</div>
     <select class="sel" id="o_${cssId(id)}">${o.map(x=>`<option value="${x[1]}">${x[0]} — ${money(x[1])}</option>`).join("")}</select>
     <button class="btn" onclick="addCard('${esc(id)}')">Add to cart</button></div></div>`;}).join("")}</div>`;}
 async function addCard(id){const p=ITEMS[id],s=document.getElementById("o_"+cssId(id));
-  try{await addToCart(id,Number(s.value),1,p.ItemName,p.PictureURL);toast("Added to cart");}catch(e){alert("Cart write failed: "+e.message);}}
+  await addToCart(id,Number(s.value),1,p.ItemName,p.PictureURL);COUPON=null;toast("Added to cart");}
 function toast(m){const d=document.createElement("div");d.textContent=m;
   d.style.cssText="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:12px 22px;border-radius:30px;z-index:999;font-size:13px";
   document.body.appendChild(d);setTimeout(()=>d.remove(),1500);}
 
-let slideIdx=0,slideTimer=null;
-function vHome(){
-  const s=SLIDES[slideIdx]||{};
-  return `<section class="hero">${s.SliderImage1?`<img class="bg" src="${s.SliderImage1}" alt="">`:""}
-    <div class="scrim"></div><div class="wrap"><div class="eb">${HOME.NewWebsitePhoneText||""}</div>
+function vHome(){const s=SLIDES[slideIdx]||{};
+  return `<section class="hero">${s.SliderImage1?`<img class="bg" src="${s.SliderImage1}">`:""}<div class="scrim"></div>
+    <div class="wrap"><div class="eb">${HOME.NewWebsitePhoneText||""}</div>
     <h1>${s.SliderText1||HOME.FooterMessageHead||""}</h1><p>${HOME.FooterMessage||""}</p>
-    ${s.SliderLink?`<button class="btn" onclick="go('cat','${esc(s.SliderLink)}')">${s.SliderLinkName||"Shop"}</button>`:""}</div>
-    ${SLIDES.length>1?`<div class="dots">${SLIDES.map((_,i)=>`<i class="${i===slideIdx?'on':''}" onclick="slideIdx=${i};render()"></i>`).join("")}</div>`:""}</section>
-    <div class="wrap">
-      ${TILES.length?`<div class="occ">${TILES.map(t=>`<a class="otile" onclick="go('cat','${esc(t.SliderOccassionName)}')">
-        <img src="${t.SliderImageName}" alt=""><span>Shop by occasion</span><h4>${t.SliderOccassionName}</h4></a>`).join("")}</div>`:""}
-      <div class="phead"><div class="eb">Customer favorites</div><h1>Most Popular</h1>
-      <div style="color:var(--muted)">${Object.keys(ITEMS).length} products from <b>InventoryItems</b> &middot;
-        tiles from <b>CustomWebsiteSliderImagesList</b> &middot; theme from <b>FontsColor</b></div></div>
-      ${tiles(Object.keys(ITEMS).slice(0,8))}</div>`;
-}
-function vCat(cat){const ids=ASSOC.filter(a=>a.ItemCategoryID===cat).map(a=>a.ItemID);
-  return `<div class="wrap"><div class="crumb"><a onclick="go('home')">Home</a> / ${cat}</div>
-    <div class="phead"><div class="eb">Shop</div><h1>${cat}</h1><div style="color:var(--muted)">${ids.length} products</div></div>
-    ${ids.length?tiles(ids):'<div class="load">No products in this category.</div>'}</div>`;}
+    ${s.SliderLink?`<button class="btn" onclick="go('cat','${esc(s.SliderLink)}')">${s.SliderLinkName||"Shop"}</button>`:""}</div></section>
+    <div class="wrap">${TILES.length?`<div class="occ">${TILES.map(t=>`<a class="otile" onclick="go('cat','${esc(t.SliderOccassionName)}')">
+      <img src="${t.SliderImageName}"><span>Shop by occasion</span><h4>${t.SliderOccassionName}</h4></a>`).join("")}</div>`:""}
+    <div class="phead"><div class="eb">Customer favorites</div><h1>Most Popular</h1></div>
+    ${tiles(Object.keys(ITEMS).slice(0,8))}</div>`;}
+function vCat(c){const ids=ASSOC.filter(a=>a.ItemCategoryID===c).map(a=>a.ItemID);
+  return `<div class="wrap"><div class="crumb"><a onclick="go('home')">Home</a> / ${c}</div>
+  <div class="phead"><div class="eb">Shop</div><h1>${c}</h1><div style="color:var(--muted)">${ids.length} products</div></div>
+  ${ids.length?tiles(ids):'<div class="load">No products.</div>'}</div>`;}
 function stars(n){return "★".repeat(n)+"☆".repeat(5-n);}
-function vItem(id){
-  const p=ITEMS[id]; if(!p)return `<div class="wrap"><div class="load">Item not found.</div></div>`;
+function vItem(id){const p=ITEMS[id];if(!p)return `<div class="wrap"><div class="load">Not found.</div></div>`;
   const o=[["As shown",p.Price],["Deluxe",p.DeluxePrice],["Premium",p.PremiumPrice]].filter(x=>x[1]!=null);
-  const rv=REVIEWS.filter(r=>r.ItemID===id);
-  const avg=rv.length?rv.reduce((s,r)=>s+r.Rating,0)/rv.length:0;
+  const rv=REVIEWS.filter(r=>r.ItemID===id),avg=rv.length?rv.reduce((s,r)=>s+r.Rating,0)/rv.length:0;
   return `<div class="wrap"><div class="crumb"><a onclick="go('home')">Home</a> / ${p.ItemName}</div>
-  <div class="content two">
-    <div class="card2"><img src="${p.PictureURL}" alt="${p.ItemName}" style="border-radius:10px"></div>
-    <div class="card2"><div class="eb">Item ${p.ItemID}</div>
-      <h1 style="font-family:var(--serif);font-weight:400;margin:8px 0">${p.ItemName}</h1>
-      ${rv.length?`<div class="stars">${stars(Math.round(avg))} <span style="color:var(--muted);font-size:12.5px">${avg.toFixed(1)} · ${rv.length} review(s)</span></div>`:""}
-      <p style="color:var(--muted)">${p.ItemDescription||""}</p>
-      <label>Size / option</label>
-      <select class="sel" id="o_${cssId(id)}">${o.map(x=>`<option value="${x[1]}">${x[0]} — ${money(x[1])}</option>`).join("")}</select>
-      <div style="height:12px"></div><label>Quantity</label>
-      <input type="number" id="qty" value="1" min="1" style="max-width:110px">
-      <div style="height:16px"></div><button class="btn" onclick="addDetail('${esc(id)}')">Add to cart</button></div></div>
-  <div class="content"><div class="card2">
-    <div class="fs">Customer reviews <span style="font-size:12px;color:var(--muted)">(only Approved=true rows are shown)</span></div>
-    ${rv.length?rv.map(r=>`<div class="rev"><div class="stars">${stars(r.Rating)}</div>
-      <b>${r.ReviewBy}</b> <span style="color:var(--muted);font-size:12px">${(r.ReviewDate||"").slice(0,10)}</span>
-      <div>${r.Review}</div></div>`).join(""):'<p style="color:var(--muted)">No approved reviews yet.</p>'}
+  <div class="content two"><div class="card2"><img src="${p.PictureURL}" style="border-radius:10px"></div>
+  <div class="card2"><div class="eb">Item ${p.ItemID}</div>
+    <h1 style="font-family:var(--serif);font-weight:400;margin:8px 0">${p.ItemName}</h1>
+    ${rv.length?`<div class="stars">${stars(Math.round(avg))} <span style="color:var(--muted);font-size:12.5px">${avg.toFixed(1)} · ${rv.length}</span></div>`:""}
+    <p style="color:var(--muted)">${p.ItemDescription||""}</p>
+    <label>Size / option</label><select class="sel" id="o_${cssId(id)}">${o.map(x=>`<option value="${x[1]}">${x[0]} — ${money(x[1])}</option>`).join("")}</select>
+    <div style="height:12px"></div><label>Quantity</label><input type="number" id="qty" value="1" min="1" style="max-width:110px">
+    <div style="height:16px"></div><button class="btn" onclick="addDetail('${esc(id)}')">Add to cart</button></div></div>
+  <div class="content"><div class="card2"><div class="fs">Customer reviews</div>
+    ${rv.length?rv.map(r=>`<div class="rev"><div class="stars">${stars(r.Rating)}</div><b>${r.ReviewBy}</b><div>${r.Review}</div></div>`).join(""):'<p style="color:var(--muted)">No approved reviews yet.</p>'}
     ${PENDING?`<div class="pend">${PENDING}</div>`:""}
-    <div style="height:18px"></div><div class="fs">Write a review</div>
-    <div class="form">
-      <div><label>Your name</label><input id="r_by" placeholder="Jane D."></div>
-      <div><label>Rating</label><select id="r_rate"><option value="5">5 ★</option><option value="4">4 ★</option>
-        <option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option></select></div>
-      <div class="full"><label>Your review</label><textarea id="r_txt" placeholder="Tell us what you thought…"></textarea></div>
-    </div><div style="height:12px"></div>
-    <button class="btn ghost" onclick="submitReview('${esc(id)}')">Submit review</button>
-    <div class="note">Submitted reviews are written with <b>Approved = false</b> and stay hidden until an admin approves them in the back office.</div>
-  </div></div></div>`;
-}
+    <div style="height:16px"></div><div class="fs">Write a review</div>
+    <div class="form"><div><label>Your name</label><input id="r_by"></div>
+    <div><label>Rating</label><select id="r_rate"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></div>
+    <div class="full"><label>Your review</label><textarea id="r_txt"></textarea></div></div>
+    <div style="height:10px"></div><button class="btn ghost" onclick="submitReview('${esc(id)}')">Submit review</button>
+    <div class="note">Submitted with <b>Approved = false</b> — hidden until an admin approves it.</div>
+  </div></div></div>`;}
 async function addDetail(id){const p=ITEMS[id],s=document.getElementById("o_"+cssId(id));
-  const q=Math.max(1,parseInt(document.getElementById("qty").value||"1",10));
-  try{await addToCart(id,Number(s.value),q,p.ItemName,p.PictureURL);go('cart');}catch(e){alert("Cart write failed: "+e.message);}}
+  const q=Math.max(1,parseInt(val("qty")||"1",10));await addToCart(id,Number(s.value),q,p.ItemName,p.PictureURL);COUPON=null;go('cart');}
+async function submitReview(id){
+  const by=val("r_by").trim(),txt=val("r_txt").trim();
+  if(!by||!txt){PENDING="Please enter your name and a review.";return render();}
+  await api("InventoryItemCustomerReviews",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({
+    CompanyID:CO,DivisionID:DV,DepartmentID:DP,ItemID:id,ReviewID:Date.now(),ReviewBy:by,
+    ReviewDate:new Date().toISOString(),Review:txt,Rating:parseInt(val("r_rate")||"5",10),Approved:false})});
+  PENDING="Thank you — your review is awaiting approval in the back office.";render();
+}
 function vPage(cid){const l=LINKS.find(x=>String(x.ContentLinkID)===String(cid));
-  if(!l)return `<div class="wrap"><div class="load">Page not found.</div></div>`;
-  return `<div class="wrap"><div class="crumb"><a onclick="go('home')">Home</a> / ${l.ContentLink}</div>
-    <div class="phead"><div class="eb">Information</div><h1>${l.ContentLink}</h1></div>
-    <div class="content"><div class="card2">${l.ContentText||""}</div></div></div>`;}
+  if(!l)return `<div class="wrap"><div class="load">Not found.</div></div>`;
+  return `<div class="wrap"><div class="phead"><div class="eb">Information</div><h1>${l.ContentLink}</h1></div>
+  <div class="content"><div class="card2">${l.ContentText||""}</div></div></div>`;}
+
 function vCart(){
   if(!CART.length)return `<div class="wrap"><div class="phead"><h1>Your Cart</h1></div><div class="content"><div class="card2">
     <p>Your cart is empty.</p><button class="btn ghost" onclick="go('home')">Browse flowers</button></div></div></div>`;
-  const t=totals();
+  const t=preview();
   return `<div class="wrap"><div class="crumb"><a onclick="go('home')">Home</a> / Cart</div>
-  <div class="phead"><h1>Your Cart</h1><div style="color:var(--muted)">Session <b>${sid()}</b> — held in <b>ItemsCart</b>.</div></div>
+  <div class="phead"><h1>Your Cart</h1></div>
   <div class="content two"><div class="card2">
-    ${CART.map(l=>`<div class="row"><div class="th"><img src="${l.PictureURL||""}" alt=""></div>
+    ${CART.map(l=>`<div class="row"><div class="th"><img src="${l.PictureURL||""}"></div>
       <div class="gr"><div style="font-family:var(--serif);font-size:17px">${l.Description}</div>
-      <div style="color:var(--muted);font-size:12.5px">Item ${l.ItemID} &middot; ${money(l.ItemUnitPrice)} ea</div><div style="height:8px"></div>
+      <div style="color:var(--muted);font-size:12.5px">Item ${l.ItemID} · ${money(l.ItemUnitPrice)} ea</div><div style="height:8px"></div>
       <div class="qty"><button onclick="setQty(${l.CartLineID},${Number(l.OrderQty)-1})">−</button><span>${Number(l.OrderQty)}</span>
       <button onclick="setQty(${l.CartLineID},${Number(l.OrderQty)+1})">+</button>
       <span class="lnk" style="margin-left:12px" onclick="removeLine(${l.CartLineID})">Remove</span></div></div>
@@ -406,114 +349,151 @@ function vCart(){
     <div style="padding-top:14px"><span class="lnk" onclick="clearCart()">Clear cart</span></div></div>
     <div class="card2"><div class="fs">Summary</div>
       <div class="tot"><span>Subtotal</span><span>${money(t.sub)}</span></div>
-      <div class="tot"><span>${t.s.ShipMethodName||"Delivery"}${t.freight===0&&t.freeOver>0?" (free over "+money(t.freeOver)+")":""}</span><span>${money(t.freight)}</span></div>
-      <div class="tot"><span>Tax (${t.taxPct}% ${TAX.TaxGroupName||""})</span><span>${money(t.tax)}</span></div>
-      <div class="tot big"><span>Total</span><span>${money(t.total)}</span></div><div style="height:16px"></div>
+      <div class="tot big"><span>Subtotal</span><span>${money(t.sub)}</span></div>
+      <div style="height:12px"></div>
       <button class="btn" style="width:100%" onclick="go('checkout')">Checkout</button>
-      <div class="note">Tax from <b>TaxGroup</b> (${TAX.TaxGroupID||"—"}) &middot; delivery from <b>ShipMethod</b> (${t.s.ShipMethodID||"—"}).</div>
+      <div class="note">Delivery, tax, coupons and gift cards are calculated at checkout from your ZIP and delivery date.</div>
     </div></div></div>`;
 }
+
 function vCheckout(){
   if(!CART.length)return `<div class="wrap"><div class="load">Cart is empty. <a class="lnk" onclick="go('home')">Shop</a></div></div>`;
-  const t=totals(), elig=eligibleAddons(), tmr=new Date(Date.now()+86400000).toISOString().slice(0,10);
-  const cats=[...cartCategories()];
+  const t=preview(), elig=eligibleAddons();
+  const tmr=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const blocked=QUOTE&&!QUOTE.serviceable;
   return `<div class="wrap"><div class="crumb"><a onclick="go('cart')">Cart</a> / Checkout</div>
   <div class="phead"><h1>Checkout</h1></div>${LASTERR?`<div class="err">${LASTERR}</div>`:""}
   <div class="content two"><div class="card2">
-    <div class="fs">Delivery method <span style="font-size:12px;color:var(--muted)">(from ShipMethod)</span></div>
+    <div class="fs">Delivery method</div>
     ${SHIPS.map(s=>`<label class="ship" style="text-transform:none;letter-spacing:0;color:var(--ink)">
-      <input type="radio" name="ship" ${s.ShipMethodID===SHIPID?"checked":""} onchange="SHIPID='${esc(s.ShipMethodID)}';render()">
-      <span style="flex:1"><b>${s.ShipMethodName}</b><br><span style="color:var(--muted);font-size:12.5px">Cut-off ${s.CutOffTime||"—"}${s.FreeOverAmount?` · free over ${money(s.FreeOverAmount)}`:""}</span></span>
-      <b>${money(s.DeliveryCharge)}</b></label>`).join("")}
-    <div style="height:22px"></div>
+      <input type="radio" name="sh" ${s.ShipMethodID===SHIPID?"checked":""} onchange="SHIPID='${esc(s.ShipMethodID)}';refreshQuote()">
+      <span style="flex:1"><b>${s.ShipMethodDescription}</b><br><span style="color:var(--muted);font-size:12.5px">${s.Message||""}</span></span>
+      </label>`).join("")}
+    <div style="height:20px"></div>
     <div class="fs">Recipient &amp; delivery</div>
     <div class="form">
       <div><label>First name</label><input id="f_first" value="Amy"></div>
       <div><label>Last name</label><input id="f_last" value="Karsten"></div>
-      <div class="full"><label>Delivery address</label><input id="f_addr1" value="3497 Kelly Street"></div>
-      <div class="full"><label>Address 2</label><input id="f_addr2" placeholder="Apt / suite"></div>
+      <div class="full"><label>Address</label><input id="f_addr1" value="3497 Kelly Street"></div>
       <div><label>City</label><input id="f_city" value="Hudsonville"></div>
       <div><label>State</label><input id="f_state" value="MI"></div>
-      <div><label>ZIP</label><input id="f_zip" value="49426"></div>
+      <div><label>ZIP</label><input id="f_zip" value="49426" onchange="refreshQuote()"></div>
       <div><label>Phone</label><input id="f_phone" value="616-669-1750"></div>
-      <div><label>Delivery date</label><input type="date" id="f_date" value="${tmr}"></div>
-      <div><label>Destination</label><select id="f_dest"><option>Residence</option><option>Business</option>
-        <option>Funeral Home</option><option>Hospital</option><option>Church</option></select></div>
-      <div><label>Occasion</label><select id="f_occ">${CATS.filter(c=>c.ItemFamilyID==="Shop By Occasion").map(c=>`<option>${c.CategoryName}</option>`).join("")}</select></div>
-      <div><label>Attention</label><input id="f_att" placeholder="Front desk"></div>
+      <div><label>Delivery date</label><input type="date" id="f_date" value="${tmr}" onchange="refreshQuote()"></div>
+      <div><label>Occasion</label><select id="f_occ">${OCCASIONS.map(o=>`<option>${o.OccasionDesc}</option>`).join("")}</select></div>
       <div class="full"><label>Card message</label><textarea id="f_msg">Thinking of you today. — The Frost family</textarea></div>
-      <div class="full"><label>Your email (CustomerID)</label><input id="f_email" value="alex@quickflora.com"></div>
+      <div class="full"><label>Your email</label><input id="f_email" value="alex@quickflora.com"></div>
     </div>
-    <div style="height:22px"></div>
-    <div class="fs">Add a little extra <span style="font-size:12px;color:var(--muted)">(Associate_AddOn_Items — scoped to what's in your cart)</span></div>
-    ${elig.length?elig.map(a=>`<label class="addon" style="text-transform:none;letter-spacing:0;color:var(--ink)">
-      <input type="checkbox" ${PICKED[a.AddOnItemID]?"checked":""} onchange="PICKED['${esc(a.AddOnItemID)}']=this.checked;render()">
-      ${a.ItemFileName?`<img class="ai" src="${a.ItemFileName}" alt="">`:`<span class="ai"></span>`}
+    ${QUOTE?(QUOTE.serviceable
+      ? `<div class="okmsg">Delivering to <b>${QUOTE.City||''}</b> — ${money(QUOTE.rate)} (<b>${QUOTE.rate_basis}</b>${QUOTE.CutOffTime?`, cut-off ${QUOTE.CutOffTime}`:''}${QUOTE.after_cutoff?' — after cut-off rate applied':''}${QUOTE.holiday?' — holiday rate applied':''})</div>`
+      : `<div class="err">${QUOTE.reason}</div>`):''}
+
+    <div style="height:18px"></div>
+    <div class="fs">Coupon</div>
+    <div class="inline"><input id="f_cpn" placeholder="e.g. WELCOME10" value="${COUPON&&COUPON.valid?COUPON.CouponCode:''}">
+      <button class="btn sm" onclick="applyCoupon()">Apply</button></div>
+    ${CPNMSG?(COUPON&&COUPON.valid?`<div class="okmsg">${CPNMSG}</div>`:`<div class="err">${CPNMSG}</div>`):''}
+
+    <div style="height:14px"></div>
+    <div class="fs">Gift card</div>
+    <div class="inline"><input id="f_gc" placeholder="e.g. GC-1001" value="${GIFT&&GIFT.valid?GIFT.GiftCardNumber:''}">
+      <button class="btn sm" onclick="applyGift()">Check</button></div>
+    ${GCMSG?(GIFT&&GIFT.valid?`<div class="okmsg">${GCMSG}</div>`:`<div class="err">${GCMSG}</div>`):''}
+
+    ${elig.length?`<div style="height:18px"></div><div class="fs">Add a little extra</div>
+      ${elig.map(a=>`<label class="addon" style="text-transform:none;letter-spacing:0;color:var(--ink)">
+      <input type="checkbox" ${PICKED[a.AddOnItemID]?"checked":""} onchange="PICKED['${esc(a.AddOnItemID)}']=this.checked;COUPON=null;render()">
+      ${a.ItemFileName?`<img class="ai" src="${a.ItemFileName}">`:`<span class="ai"></span>`}
       <span style="flex:1"><b>${a.AddOnItemName}</b><br><span style="color:var(--muted);font-size:12.5px">${a.AddOnDescription||""}</span></span>
-      <b>${money(a.Price)}</b></label>`).join("")
-      :'<p style="color:var(--muted)">No add-ons are associated with the categories in your cart.</p>'}
-    <div class="note">Cart categories: <b>${cats.join(", ")||"—"}</b>. Only add-ons linked to these categories are offered — e.g. balloons and chocolates are deliberately not associated with Sympathy.</div>
-    <div class="note"><b>No card data is collected or stored.</b> PaymentMethodID = TEST-NO-CARD, BalanceDue = Total (PCI).</div>
+      <b>${money(a.Price)}</b></label>`).join("")}`:''}
+    <div class="note"><b>No card data is collected or stored.</b> Totals below are a preview — the server recalculates tax, delivery, coupon and gift card independently when you place the order.</div>
   </div>
   <div class="card2"><div class="fs">Order summary</div>
-    ${CART.map(l=>`<div class="tot"><span>${l.Description} × ${Number(l.OrderQty)}</span><span>${money(Number(l.OrderQty)*Number(l.ItemUnitPrice))}</span></div>`).join("")}
-    ${Object.keys(PICKED).filter(k=>PICKED[k]&&elig.some(a=>a.AddOnItemID===k)).map(k=>{const a=ADDONS.find(x=>x.AddOnItemID===k);
-      return `<div class="tot"><span>+ ${a.AddOnItemName}</span><span>${money(a.Price)}</span></div>`;}).join("")}
-    <div class="tot" style="border-top:1px solid var(--line);margin-top:6px;padding-top:10px"><span>Subtotal</span><span>${money(t.sub)}</span></div>
-    <div class="tot"><span>${t.s.ShipMethodName||"Delivery"}</span><span>${money(t.freight)}</span></div>
-    <div class="tot"><span>Tax (${t.taxPct}%)</span><span>${money(t.tax)}</span></div>
-    <div class="tot big"><span>Total</span><span>${money(t.total)}</span></div><div style="height:16px"></div>
-    <button class="btn" id="placeBtn" style="width:100%" onclick="submitOrder()">Place order</button>
-    <div class="note">Writes <b>TaxGroupID</b>=${TAX.TaxGroupID||"—"} and <b>ShipMethodID</b>=${t.s.ShipMethodID||"—"} onto OrderHeader.</div>
+    <div class="tot"><span>Goods</span><span>${money(t.sub)}</span></div>
+    ${t.disc?`<div class="tot disc"><span>Coupon ${COUPON.CouponCode}</span><span>−${money(t.disc)}</span></div>`:''}
+    <div class="tot"><span>Delivery${QUOTE&&QUOTE.rate_basis?` <span style="color:var(--muted);font-size:11px">(${QUOTE.rate_basis})</span>`:''}</span><span>${money(t.freight)}</span></div>
+    ${t.service?`<div class="tot"><span>Service charge</span><span>${money(t.service)}</span></div>`:''}
+    <div class="tot"><span>Tax (on ${money(t.taxbase)})</span><span>${money(t.tax)}</span></div>
+    <div class="tot big"><span>Total</span><span>${money(t.total)}</span></div>
+    ${t.gc?`<div class="tot disc"><span>Gift card ${GIFT.GiftCardNumber}</span><span>−${money(t.gc)}</span></div>
+      <div class="tot big"><span>Balance due</span><span>${money(t.due)}</span></div>`:''}
+    <div style="height:14px"></div>
+    <button class="btn" id="placeBtn" style="width:100%" ${blocked?'disabled':''} onclick="submitOrder()">
+      ${blocked?'Cannot deliver to that ZIP':'Place order'}</button>
   </div></div></div>`;
 }
 async function submitOrder(){
-  const b=document.getElementById("placeBtn");b.disabled=true;b.textContent="Writing to database…";
-  try{const n=await placeOrder({first:val("f_first"),last:val("f_last"),addr1:val("f_addr1"),addr2:val("f_addr2"),
-    city:val("f_city"),state:val("f_state"),zip:val("f_zip"),phone:val("f_phone"),deliveryDate:val("f_date"),
-    destination:val("f_dest"),occasion:val("f_occ"),attention:val("f_att"),cardMessage:val("f_msg"),email:val("f_email")});
-    go("done",n);
-  }catch(e){LASTERR="Order failed: "+e.message;b.disabled=false;b.textContent="Place order";render();}
+  const b=document.getElementById("placeBtn");b.disabled=true;b.textContent="Placing order…";
+  try{
+    const res=await rpc("fn_place_order",{
+      p_co:CO,p_dv:DV,p_dp:DP,p_session:sid(),
+      p_cust:{first:val("f_first"),last:val("f_last"),addr1:val("f_addr1"),city:val("f_city"),
+              state:val("f_state"),zip:val("f_zip"),phone:val("f_phone"),email:val("f_email")},
+      p_date:val("f_date"),p_occasion:val("f_occ"),p_shipmethod:SHIPID,p_dest:'Residence',
+      p_coupon:(COUPON&&COUPON.valid)?COUPON.CouponCode:null,
+      p_giftcard:(GIFT&&GIFT.valid)?GIFT.GiftCardNumber:null,
+      p_cardmessage:val("f_msg"),
+      p_addons:Object.keys(PICKED).filter(k=>PICKED[k])
+    });
+    if(!res.ok){LASTERR=res.error;b.disabled=false;b.textContent="Place order";return render();}
+    PICKED={};COUPON=null;GIFT=null;QUOTE=null;CPNMSG="";GCMSG="";
+    await loadCart();
+    go("done",res);
+  }catch(e){LASTERR=e.message;b.disabled=false;b.textContent="Place order";render();}
 }
-function vDone(n){return `<div class="wrap"><div class="content"><div class="ok">
-  <div class="eb">Order confirmed &amp; saved</div><h1>Thank you!</h1><div class="onum">${n}</div>
-  <p style="color:var(--muted)">Written to <b>OrderHeader</b> (with TaxGroupID + ShipMethodID) and <b>OrderDetail</b>; <b>ItemsCart</b> emptied.</p>
-  <button class="btn" onclick="go('lookup','${n}')">Look it up in the database</button>
-  <button class="btn ghost" onclick="go('home')">Keep shopping</button></div></div></div>`;}
-function vLookup(p){return `<div class="wrap"><div class="phead"><div class="eb">Verification</div><h1>Track / verify order</h1></div>
+function vDone(r){
+  const tx=r.tax&&r.tax.Lines?r.tax.Lines:[];
+  return `<div class="wrap"><div class="content"><div class="ok">
+    <div class="eb">Order confirmed &amp; saved</div><h1>Thank you!</h1>
+    <div class="onum">${r.OrderNumber}</div>
+    <table class="tbl" style="margin-top:16px;max-width:520px">
+      <tr><td>Goods</td><td align="right">${money(r.Subtotal)}</td></tr>
+      ${Number(r.Discount)?`<tr><td>Coupon discount</td><td align="right">−${money(r.Discount)}</td></tr>`:''}
+      <tr><td>Delivery (${r.delivery&&r.delivery.rate_basis})</td><td align="right">${money(r.Freight)}</td></tr>
+      ${Number(r.ServiceCharge)?`<tr><td>Service charge</td><td align="right">${money(r.ServiceCharge)}</td></tr>`:''}
+      ${tx.map(l=>`<tr><td>${l.Description} ${l.TaxPercent}%${l.TaxOnTax?' <i>(on tax)</i>':''}</td><td align="right">${money(l.Tax)}</td></tr>`).join("")}
+      <tr><td><b>Total</b></td><td align="right"><b>${money(r.Total)}</b></td></tr>
+      ${Number(r.GiftCardApplied)?`<tr><td>Gift card applied</td><td align="right">−${money(r.GiftCardApplied)}</td></tr>
+      <tr><td><b>Balance due</b></td><td align="right"><b>${money(r.BalanceDue)}</b></td></tr>`:''}
+    </table>
+    <p style="color:var(--muted)">Saved to <b>OrderHeader</b> + <b>OrderDetail</b>. It is now visible in the back office Orders list.</p>
+    <button class="btn" onclick="go('lookup','${r.OrderNumber}')">Track this order</button>
+    <button class="btn ghost" onclick="go('home')">Keep shopping</button>
+  </div></div></div>`;
+}
+function vLookup(p){return `<div class="wrap"><div class="phead"><div class="eb">Verification</div><h1>Track order</h1></div>
   <div class="content"><div class="card2"><div class="form"><div class="full"><label>Order number</label>
-  <input id="lk" value="${p||""}" placeholder="HUD-…"></div></div><div style="height:12px"></div>
+  <input id="lk" value="${p||""}"></div></div><div style="height:12px"></div>
   <button class="btn" onclick="doLookup()">Fetch from database</button><div id="lkout"></div></div></div></div>`;}
 async function doLookup(){
   const n=val("lk").trim(),out=document.getElementById("lkout");
-  if(!n){out.innerHTML='<div class="err">Enter an order number.</div>';return;}
+  if(!n)return out.innerHTML='<div class="err">Enter an order number.</div>';
   out.innerHTML='<div class="load">Querying…</div>';
-  try{const h=await api(`OrderHeader?OrderNumber=eq.${encodeURIComponent(n)}&select=*`);
-    if(!h.length){out.innerHTML='<div class="err">No such order.</div>';return;}
-    const d=await api(`OrderDetail?OrderNumber=eq.${encodeURIComponent(n)}&select=*&order=LineId`);
-    const o=h[0];
-    out.innerHTML=`<div style="height:18px"></div><div class="fs">OrderHeader</div><table class="tbl"><tbody>
-      ${[["OrderNumber",o.OrderNumber],["ShippingName",o.ShippingName],["OccasionCode",o.OccasionCode],
-         ["TaxGroupID",o.TaxGroupID],["ShipMethodID",o.ShipMethodID],
-         ["Subtotal",money(o.Subtotal)],["Freight",money(o.Freight)],["TaxPercent",o.TaxPercent+"%"],
-         ["TaxAmount",money(o.TaxAmount)],["Total",money(o.Total)],["PaymentMethodID",o.PaymentMethodID]]
-        .map(r=>`<tr><th style="width:180px">${r[0]}</th><td>${r[1]??""}</td></tr>`).join("")}</tbody></table>
-      <div style="height:20px"></div><div class="fs">OrderDetail (${d.length} lines)</div>
-      <table class="tbl"><thead><tr><th>Line</th><th>ItemID</th><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead>
-      <tbody>${d.map(l=>`<tr><td>${l.LineId}</td><td>${l.ItemID}</td><td>${l.Description}</td>
-        <td>${Number(l.OrderQty)}</td><td>${money(l.ItemUnitPrice)}</td><td>${money(l.Total)}</td></tr>`).join("")}</tbody></table>`;
-  }catch(e){out.innerHTML='<div class="err">'+e.message+'</div>';}
+  const h=await api(`OrderHeader?OrderNumber=eq.${encodeURIComponent(n)}&select=*`);
+  if(!h.length)return out.innerHTML='<div class="err">No such order.</div>';
+  const d=await api(`OrderDetail?OrderNumber=eq.${encodeURIComponent(n)}&select=*&order=LineId`),o=h[0];
+  out.innerHTML=`<div style="height:16px"></div><table class="tbl">
+    ${[["OrderNumber",o.OrderNumber],["Status",o.OrderStatus],["Recipient",o.ShippingName],
+       ["Deliver to",[o.ShippingCity,o.ShippingZip].join(" ")],["Due",(o.OrderDueDate||"").slice(0,10)],
+       ["Tax group",o.TaxGroupID],["Ship method",o.ShipMethodID],["Coupon",o.DiscountCouponCode||"—"],
+       ["Gift card",o.GiftCertificate||"—"],["Total",money(o.Total)],["Balance due",money(o.BalanceDue)]]
+      .map(r=>`<tr><th style="width:170px">${r[0]}</th><td>${r[1]??""}</td></tr>`).join("")}</table>
+    <div style="height:14px"></div><table class="tbl"><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead>
+    <tbody>${d.map(l=>`<tr><td>${l.LineId}</td><td>${l.Description}</td><td>${Number(l.OrderQty)}</td>
+      <td>${money(l.ItemUnitPrice)}</td><td>${money(l.SubTotal)}</td></tr>`).join("")}</tbody></table>`;
 }
+
 function render(){
   const p=ROUTE.page,a=document.getElementById("app");
   a.innerHTML=p==="home"?vHome():p==="cat"?vCat(ROUTE.arg):p==="item"?vItem(ROUTE.arg):p==="page"?vPage(ROUTE.arg)
     :p==="cart"?vCart():p==="checkout"?vCheckout():p==="done"?vDone(ROUTE.arg):p==="lookup"?vLookup(ROUTE.arg):vHome();
   if(p==="home"&&SLIDES.length>1){clearInterval(slideTimer);
     slideTimer=setInterval(()=>{if(ROUTE.page!=="home"){clearInterval(slideTimer);return;}
-      slideIdx=(slideIdx+1)%SLIDES.length;render();},7000);}
+      slideIdx=(slideIdx+1)%SLIDES.length;render();},8000);}
+  if(p==="checkout"&&QUOTE===null){refreshQuote();}
 }
 (async function(){try{await loadStore();applyTheme();applyChrome();await loadCart();render();}
-catch(e){document.getElementById("app").innerHTML='<div class="wrap"><div class="err">Could not load store config: '+e.message+'</div></div>';}})();
+catch(e){document.getElementById("app").innerHTML='<div class="wrap"><div class="err">Could not load: '+e.message+'</div></div>';}})();
 </script>
 </body>
 </html>
