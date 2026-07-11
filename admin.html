@@ -5,10 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>QuickFlora X — Back Office</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- GrapesJS: drag-and-drop email builder (newsletter preset emits email-safe table HTML) -->
+<!-- GrapesJS: modern drag-and-drop WYSIWYG.
+     newsletter preset -> email-safe table HTML for confirmations
+     webpage preset    -> rich HTML for content pages -->
 <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.7/dist/css/grapes.min.css">
 <script src="https://unpkg.com/grapesjs@0.21.7/dist/grapes.min.js"></script>
 <script src="https://unpkg.com/grapesjs-preset-newsletter@1.0.2/dist/index.js"></script>
+<script src="https://unpkg.com/grapesjs-preset-webpage@1.0.3/dist/index.js"></script>
 <style>
 :root{--bg:#f6f7f9;--panel:#fff;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;
       --brand:#2f5d4e;--brand-d:#244a3e;--accent:#c76b73;--ok:#0f7b4f;--warn:#b45309;--bad:#b91c1c;--soft:#eef2f0}
@@ -148,6 +151,7 @@ async function render(){
     if(VIEW==="orders") return orders();
     if(VIEW==="reviews") return reviews();
     if(VIEW==="email") return emailBuilder();
+    if(VIEW==="pages") return pageBuilder();
     return grid(GRIDS[VIEW]);
   }catch(e){ M.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
@@ -416,6 +420,53 @@ async function saveTemplate(){
     body:JSON.stringify({Email_Content:full, Email_Subject:document.getElementById("subj").value,
                          updated_at:new Date().toISOString()})});
   toast("Template saved to EmailTemplates");
+}
+
+/* ---------- CONTENT PAGE WYSIWYG (webpage preset) ---------- */
+let PG=null, PGE=null;
+async function pageBuilder(){
+  const rows=await api(`ContentLinks?${TQ}&select=*&order=SortOrder`);
+  PG=rows[0]||null;
+  M.innerHTML=`<h2>Content pages</h2>
+  <div class="sub2">Drag-and-drop editor. Saves to <b>ContentLinks.ContentText</b> — the storefront renders it immediately.</div>
+  <div class="panel">
+    <div class="bar">
+      <select id="pgsel">${rows.map(r=>`<option value="${r.ContentLinkID}">${esc(r.ContentLink)}</option>`).join("")}</select>
+      <input id="pgtitle" style="min-width:280px" placeholder="Page title" value="${esc(PG?PG.ContentLink:"")}">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">
+        <input type="checkbox" id="pgactive" ${PG&&PG.ContentActive?"checked":""}> Visible on site</label>
+      <button onclick="savePage()">Save page</button>
+      <button class="sec" onclick="viewOnSite()">View on storefront</button>
+    </div>
+  </div>
+  <div class="panel" style="padding:0"><div id="pgjs" style="height:620px"></div></div>`;
+
+  document.getElementById("pgsel").onchange=e=>{
+    PG=rows.find(r=>String(r.ContentLinkID)===e.target.value);
+    document.getElementById("pgtitle").value=PG.ContentLink||"";
+    document.getElementById("pgactive").checked=!!PG.ContentActive;
+    PGE.setComponents(PG.ContentText||"");
+  };
+
+  PGE=grapesjs.init({
+    container:"#pgjs", height:"620px", storageManager:false,
+    plugins:["gjs-preset-webpage"],
+    pluginsOpts:{"gjs-preset-webpage":{}},
+    components: PG ? PG.ContentText : "<div>New page</div>"
+  });
+}
+async function savePage(){
+  if(!PGE||!PG) return;
+  const html=`<style>${PGE.getCss()}</style>${PGE.getHtml()}`;
+  await api(`ContentLinks?ContentLinkID=eq.${PG.ContentLinkID}&${TQ}`,{method:"PATCH",
+    headers:{Prefer:"return=minimal"},body:JSON.stringify({
+      ContentText:html,
+      ContentLink:document.getElementById("pgtitle").value,
+      ContentActive:document.getElementById("pgactive").checked})});
+  toast("Page saved — live on the storefront");
+}
+function viewOnSite(){
+  window.open("https://htmlpreview.github.io/?https://github.com/QuickFlora/hudsonville-preview/blob/main/store.html","_blank");
 }
 
 /* render tokens against a real order so the florist sees exactly what a customer gets */
