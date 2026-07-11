@@ -63,6 +63,7 @@ label.f{display:block;font-size:11px;text-transform:uppercase;color:var(--muted)
     <div class="grp">Operations</div>
     <a data-v="dash">Dashboard</a>
     <a data-v="orders" class="on">Orders</a>
+    <a data-v="orderlines">Order lines</a>
     <a data-v="reviews">Reviews (moderation)</a>
     <a data-v="customers">Customers</a>
     <div class="grp">Commerce rules</div>
@@ -150,7 +151,15 @@ const GRIDS={
         cols:["ItemFamilyID","ItemCategoryID","ItemID","SortOrder"],limit:400},
   addonlinks:{title:"Add-on links",sub:"Associate_AddOn_Items — scopes each add-on to the categories it may be offered on (e.g. balloons are NOT linked to Sympathy).",
         table:"Associate_AddOn_Items",pk:"id",
-        cols:["AddOnItemID","ItemCategoryID","ItemID"],limit:600}
+        cols:["AddOnItemID","ItemCategoryID","ItemID"],limit:600},
+  /* record editors reached from the Orders / Reviews screens */
+  orderhdr:{title:"Order",sub:"OrderHeader — the full order record.",table:"OrderHeader",pk:"id",
+        cols:["OrderNumber","CustomerID","ShippingName","Total","OrderStatus"]},
+  orderlines:{title:"Order lines",sub:"OrderDetail — one row per item on an order.",table:"OrderDetail",pk:"OrderLineNumber",
+        cols:["OrderNumber","LineId","ItemID","Description","OrderQty","ItemUnitPrice","SubTotal","Total"]},
+  reviewrec:{title:"Review",sub:"InventoryItemCustomerReviews — only Approved=true rows show on the storefront.",
+        table:"InventoryItemCustomerReviews",pk:"id",
+        cols:["ItemID","ReviewBy","Rating","Approved","Review"]}
 };
 
 let VIEW="orders";
@@ -250,6 +259,7 @@ async function orderDetail(num){
   M.innerHTML=`<h2>${esc(num)}</h2>
   <div class="sub2"><a onclick="orders()" style="color:var(--accent);cursor:pointer">← back to orders</a></div>
   <div class="bar">
+    <button onclick="openEdit('orderhdr',${o.id})">Edit order</button>
     ${["APPROVED","PRINTED","SHIPPED","BILLED"].map(s=>`<button class="sec" onclick="setStatus('${esc(num)}','${s}')">Mark ${s}</button>`).join("")}
     <span class="pill ${esc(o.OrderStatus||"NEW")}">${esc(o.OrderStatus||"NEW")}</span>
   </div>
@@ -279,10 +289,13 @@ async function orderDetail(num){
     </table></div>
   </div>
   <div class="panel"><h3>Lines (OrderDetail)</h3>
-    <table><thead><tr><th>#</th><th>ItemID</th><th>Description</th><th>Qty</th><th>Unit</th><th>Subtotal</th><th>Delivery</th></tr></thead>
-    <tbody>${d.map(l=>`<tr><td>${l.LineId}</td><td class="mono">${esc(l.ItemID)}</td><td>${esc(l.Description)}</td>
+    <table><thead><tr><th>#</th><th>ItemID</th><th>Description</th><th>Qty</th><th>Unit</th><th>Subtotal</th><th>Delivery</th><th style="width:70px"></th></tr></thead>
+    <tbody>${d.map(l=>`<tr class="click" onclick="openEdit('orderlines',${l.OrderLineNumber})">
+      <td>${l.LineId}</td><td class="mono">${esc(l.ItemID)}</td><td>${esc(l.Description)}</td>
       <td>${Number(l.OrderQty)}</td><td>${money(l.ItemUnitPrice)}</td><td>${money(l.SubTotal)}</td>
-      <td>${money(l.DeliveryCharge)}</td></tr>`).join("")}</tbody></table></div>`;
+      <td>${money(l.DeliveryCharge)}</td>
+      <td><button class="sec" onclick="event.stopPropagation();openEdit('orderlines',${l.OrderLineNumber})">Edit</button></td>
+      </tr>`).join("")}</tbody></table></div>`;
 }
 async function setStatus(num,s){
   const flags={APPROVED:{Approved:true},PRINTED:{Printed:true},SHIPPED:{Shipped:true},BILLED:{Billed:true}};
@@ -294,21 +307,24 @@ async function setStatus(num,s){
 /* ---------- REVIEWS MODERATION ---------- */
 async function reviews(){
   const rows=await api(`InventoryItemCustomerReviews?${TQ}&select=*&order=ReviewID.desc`);
-  M.innerHTML=`<h2>Reviews</h2><div class="sub2">Only <b>Approved = true</b> rows appear on the storefront.</div>
+  M.innerHTML=`<h2>Reviews</h2><div class="sub2">Only <b>Approved = true</b> rows appear on the storefront. Click a review to open its record page.</div>
   <div class="panel"><table>
-   <thead><tr><th>Item</th><th>By</th><th>Rating</th><th>Review</th><th>Status</th><th></th></tr></thead>
-   <tbody>${rows.map(r=>`<tr>
+   <thead><tr><th>Item</th><th>By</th><th>Rating</th><th>Review</th><th>Status</th><th style="width:210px"></th></tr></thead>
+   <tbody>${rows.length?rows.map(r=>`<tr class="click" onclick="openEdit('reviewrec',${r.id})">
      <td class="mono">${esc(r.ItemID)}</td><td>${esc(r.ReviewBy)}</td><td>${"★".repeat(r.Rating||0)}</td>
-     <td>${esc(r.Review)}</td>
+     <td>${esc(String(r.Review||"").slice(0,70))}</td>
      <td>${r.Approved?'<span class="pill APPROVED">APPROVED</span>':'<span class="pill PRINTED">PENDING</span>'}</td>
      <td>${r.Approved
-        ? `<button class="danger" onclick="modReview(${r.ReviewID},false)">Un-approve</button>`
-        : `<button onclick="modReview(${r.ReviewID},true)">Approve</button>`}</td></tr>`).join("")}
+        ? `<button class="danger" onclick="event.stopPropagation();modReview(${r.id},false)">Un-approve</button>`
+        : `<button onclick="event.stopPropagation();modReview(${r.id},true)">Approve</button>`}
+        <button class="sec" onclick="event.stopPropagation();openEdit('reviewrec',${r.id})">Edit</button></td></tr>`).join("")
+     :'<tr><td colspan="6" style="color:var(--muted);padding:22px">No reviews.</td></tr>'}
    </tbody></table></div>`;
 }
 async function modReview(id,ok){
-  await api(`InventoryItemCustomerReviews?ReviewID=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
+  await api(`InventoryItemCustomerReviews?id=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
     body:JSON.stringify({Approved:ok,ApprovedBy:ok?"admin":null,ApprovedAt:ok?new Date().toISOString():null})});
+  toast(ok?"Review approved":"Review un-approved");
   reviews();
 }
 
