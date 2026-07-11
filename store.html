@@ -142,6 +142,11 @@ async function rpc(fn,args){return api("rpc/"+fn,{method:"POST",body:JSON.string
 let AUTH=null, PROFILE=null, ADDRESSES=[], MYORDERS=[], WISH=[], LOYALTY=null, AUTHERR="";
 /* Legacy QuickFlora has no OrderStatus column — status is the OrderHeader bit flags. */
 function ostat(o){ return o.Billed?"BILLED":o.Shipped?"SHIPPED":o.Printed?"PRINTED":o.Approved?"APPROVED":"NEW"; }
+/* Checkout form state. Held OUTSIDE the DOM so a re-render (applying a coupon, re-quoting
+   delivery) never wipes what the customer has typed. */
+let FORM={first:"Amy",last:"Karsten",addr1:"3497 Kelly Street",city:"Hudsonville",state:"MI",
+          zip:"49426",phone:"616-669-1750",date:"",occ:"",msg:"Thinking of you today. — The Frost family",
+          email:"alex@quickflora.com"};
 /* hardened checkout state */
 let PAYSIM="ok";        // which test card the hosted field simulates
 let AUTHZ=null;         // gateway authorisation (token-based; no card data)
@@ -361,7 +366,7 @@ function preview(){
   return {...b,tax,taxLines:TAXCALC.Lines||[],total,gc,due:+(total-gc).toFixed(2)};
 }
 async function refreshQuote(){
-  const zip=val("f_zip").trim(), date=val("f_date");
+  const zip=(FORM.zip||"").trim(), date=FORM.date;
   if(SHIPID==='PICKUP'){QUOTE={serviceable:true,rate:0,rate_basis:'Store Pickup'};}
   else if(zip.length<5||!date){QUOTE=null;}
   else QUOTE=await rpc("fn_quote_delivery",{p_co:CO,p_dv:DV,p_dp:DP,p_zip:zip,p_date:date});
@@ -372,7 +377,7 @@ async function applyCoupon(){
   if(!code){COUPON=null;CPNMSG="";}
   else{
     COUPON=await rpc("fn_validate_coupon",{p_co:CO,p_dv:DV,p_dp:DP,p_code:code,
-                      p_subtotal:goodsSubtotal(),p_date:val("f_date")||new Date().toISOString().slice(0,10)});
+                      p_subtotal:goodsSubtotal(),p_date:FORM.date||new Date().toISOString().slice(0,10)});
     CPNMSG=COUPON.valid?`Coupon ${COUPON.CouponCode} applied — ${COUPON.description}.`:COUPON.reason;
   }
   await recalcTax(); render();
@@ -500,18 +505,21 @@ function vCheckout(){
         ${ADDRESSES.map((a,i)=>`<option value="${i}">${a.ShipToName} — ${a.ShipToCity} ${a.ShipToZip}</option>`).join("")}
       </select><div style="height:14px"></div>`:''}
     <div class="form">
-      <div><label>First name</label><input id="f_first" value="Amy"></div>
-      <div><label>Last name</label><input id="f_last" value="Karsten"></div>
-      <div class="full"><label>Address</label><input id="f_addr1" value="3497 Kelly Street"></div>
-      <div><label>City</label><input id="f_city" value="Hudsonville"></div>
-      <div><label>State</label><input id="f_state" value="MI"></div>
-      <div><label>ZIP</label><input id="f_zip" value="49426" onchange="refreshQuote()"></div>
-      <div><label>Phone</label><input id="f_phone" value="616-669-1750"></div>
-      <div><label>Delivery date</label><input type="date" id="f_date" min="${new Date().toISOString().slice(0,10)}" value="${tmr}" onchange="refreshQuote()"></div>
-      <div><label>Occasion</label><select id="f_occ">${OCCASIONS.map(o=>`<option>${o.OccasionDesc}</option>`).join("")}</select></div>
+      <div><label>First name</label><input id="f_first" value="${esc(FORM.first)}" oninput="FORM.first=this.value"></div>
+      <div><label>Last name</label><input id="f_last" value="${esc(FORM.last)}" oninput="FORM.last=this.value"></div>
+      <div class="full"><label>Address</label><input id="f_addr1" value="${esc(FORM.addr1)}" oninput="FORM.addr1=this.value"></div>
+      <div><label>City</label><input id="f_city" value="${esc(FORM.city)}" oninput="FORM.city=this.value"></div>
+      <div><label>State</label><input id="f_state" value="${esc(FORM.state)}" oninput="FORM.state=this.value"></div>
+      <div><label>ZIP</label><input id="f_zip" value="${esc(FORM.zip)}" oninput="FORM.zip=this.value" onchange="refreshQuote()"></div>
+      <div><label>Phone</label><input id="f_phone" value="${esc(FORM.phone)}" oninput="FORM.phone=this.value"></div>
+      <div><label>Delivery date</label><input type="date" id="f_date" min="${new Date().toISOString().slice(0,10)}"
+        value="${esc(FORM.date)}" oninput="FORM.date=this.value" onchange="refreshQuote()">
+        <div style="color:var(--muted);font-size:11.5px;margin-top:4px">Earliest date we can deliver to this ZIP</div></div>
+      <div><label>Occasion</label><select id="f_occ" onchange="FORM.occ=this.value">
+        ${OCCASIONS.map(o=>`<option ${FORM.occ===o.OccasionDesc?"selected":""}>${o.OccasionDesc}</option>`).join("")}</select></div>
       <div class="full"><label>Card message <span id="msgcount" style="color:var(--muted);font-weight:400">0 / 240</span></label>
-        <textarea id="f_msg" maxlength="240" oninput="msgCount()">Thinking of you today. — The Frost family</textarea></div>
-      <div class="full"><label>Your email</label><input id="f_email" value="${AUTH?AUTH.email:'alex@quickflora.com'}" ${AUTH?'readonly':''}></div>
+        <textarea id="f_msg" maxlength="240" oninput="FORM.msg=this.value;msgCount()">${esc(FORM.msg)}</textarea></div>
+      <div class="full"><label>Your email</label><input id="f_email" value="${esc(AUTH?AUTH.email:FORM.email)}" oninput="FORM.email=this.value" ${AUTH?'readonly':''}></div>
     </div>
     ${AUTH?`<label class="addon" style="text-transform:none;letter-spacing:0;color:var(--ink)">
       <input type="checkbox" id="f_savead"><span>Save this recipient to my address book</span></label>`
@@ -596,12 +604,12 @@ async function submitOrder(){
     b.textContent="Placing order…";
     const res=await rpc("fn_place_order",{
       p_co:CO,p_dv:DV,p_dp:DP,p_session:sid(),
-      p_cust:{first:val("f_first"),last:val("f_last"),addr1:val("f_addr1"),city:val("f_city"),
-              state:val("f_state"),zip:val("f_zip"),phone:val("f_phone"),email:val("f_email")},
-      p_date:val("f_date"),p_occasion:val("f_occ"),p_shipmethod:SHIPID,p_dest:'Residence',
+      p_cust:{first:FORM.first,last:FORM.last,addr1:FORM.addr1,city:FORM.city,
+              state:FORM.state,zip:FORM.zip,phone:FORM.phone,email:AUTH?AUTH.email:FORM.email},
+      p_date:FORM.date,p_occasion:FORM.occ||val("f_occ"),p_shipmethod:SHIPID,p_dest:'Residence',
       p_coupon:(COUPON&&COUPON.valid)?COUPON.CouponCode:null,
       p_giftcard:(GIFT&&GIFT.valid)?GIFT.GiftCardNumber:null,
-      p_cardmessage:val("f_msg"),
+      p_cardmessage:FORM.msg,
       p_addons:Object.keys(PICKED).filter(k=>PICKED[k]),
       p_idem:idemKey(),
       p_authcode:AUTHZ?AUTHZ.AuthCode:null
@@ -611,8 +619,8 @@ async function submitOrder(){
     const sv=document.getElementById("f_savead");
     if(AUTH && sv && sv.checked){
       await rpc("fn_save_shipto",{p_co:CO,p_dv:DV,p_dp:DP,p_customer:CUSTID(),p_addr:{
-        ShipToName:(val("f_first")+" "+val("f_last")).trim(),ShipToAddress1:val("f_addr1"),
-        ShipToCity:val("f_city"),ShipToState:val("f_state"),ShipToZip:val("f_zip"),ShipToPhone:val("f_phone")}});
+        ShipToName:(FORM.first+" "+FORM.last).trim(),ShipToAddress1:FORM.addr1,
+        ShipToCity:FORM.city,ShipToState:FORM.state,ShipToZip:FORM.zip,ShipToPhone:FORM.phone}});
     }
     PICKED={};COUPON=null;GIFT=null;QUOTE=null;CPNMSG="";GCMSG="";SUBMITTING=false;
     await loadCart(); if(AUTH) await loadAccount();
@@ -766,8 +774,16 @@ function render(){
   if(p==="home"&&SLIDES.length>1){clearInterval(slideTimer);
     slideTimer=setInterval(()=>{if(ROUTE.page!=="home"){clearInterval(slideTimer);return;}
       slideIdx=(slideIdx+1)%SLIDES.length;render();},8000);}
+  if(p==="checkout"&&!FORM.date){initDeliveryDate();return;}   // ask the server for the first deliverable date
   if(p==="checkout"&&QUOTE===null){refreshQuote();}
   if(p==="checkout"){msgCount();}
+}
+/* Default the delivery date to the first date the shop can ACTUALLY deliver to this ZIP.
+   Defaulting to "tomorrow" quoted a Sunday, which the delivery rules then refused. */
+async function initDeliveryDate(){
+  try{ FORM.date = await rpc("fn_next_delivery_date",{p_co:CO,p_dv:DV,p_dp:DP,p_zip:FORM.zip}); }
+  catch(e){ FORM.date = new Date(Date.now()+86400000).toISOString().slice(0,10); }
+  QUOTE=null; render();
 }
 (async function(){try{
   loadAuth();
