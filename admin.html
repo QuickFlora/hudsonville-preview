@@ -75,13 +75,17 @@ label.f{display:block;font-size:11px;text-transform:uppercase;color:var(--muted)
     <div class="grp">Catalog</div>
     <a data-v="items">Items</a>
     <a data-v="cats">Categories</a>
+    <a data-v="famcat">Family &amp; category links</a>
     <a data-v="addons">Add-ons</a>
+    <a data-v="addonlinks">Add-on links</a>
     <div class="grp">Website</div>
+    <a data-v="companies">Company / logo</a>
     <a data-v="home">Home page</a>
     <a data-v="theme">Theme (FontsColor)</a>
-    <a data-v="seo">SEO</a>
+    <a data-v="seo">SEO / social</a>
     <a data-v="pages">Content pages</a>
     <a data-v="slider">Sliders</a>
+    <a data-v="sliderimg">Slider images</a>
     <a data-v="email">Email templates</a>
   </aside>
   <main id="main"><div class="panel">Loading…</div></main>
@@ -131,7 +135,20 @@ const GRIDS={
   email:{title:"Email templates",sub:"Used to render the order confirmation. {{tokens}} are substituted at send time.",
         table:"EmailTemplates",pk:"RowID",cols:["Full_Name","Email_Subject","Email_Content","Status"]},
   customers:{title:"Customers",sub:"CustomerInformation. Note: the production cleartext CustomerPassword column is deliberately NOT replicated here.",
-        table:"CustomerInformation",pk:"id",cols:["CustomerID","CustomerFirstName","CustomerLastName","CustomerEmail","CustomerPhone","CustomerCity","CustomerZip"]}
+        table:"CustomerInformation",pk:"id",cols:["CustomerID","CustomerFirstName","CustomerLastName","CustomerEmail","CustomerPhone","CustomerCity","CustomerZip"]},
+  /* --- parity with the earlier table-editor admin --- */
+  companies:{title:"Company / logo",sub:"Drives the storefront logo, name, phone, email and currency symbol.",
+        table:"Companies",pk:"id",
+        cols:["CompanyName","CompanyEmail","CompanyPhone","TollFreeNumber","CompanyWebAddress","CompanyLogoUrl","CurrencySymbol","IsActive"]},
+  sliderimg:{title:"Slider images / occasion tiles",sub:"CustomWebsiteSliderImagesList — the four occasion tiles on the storefront home page.",
+        table:"CustomWebsiteSliderImagesList",pk:"id",
+        cols:["SliderOccassionName","SliderImageName","rownumber"]},
+  famcat:{title:"Family &amp; category links",sub:"ItemFamilyCategoryAssociation — which products appear in which category.",
+        table:"ItemFamilyCategoryAssociation",pk:"id",
+        cols:["ItemFamilyID","ItemCategoryID","ItemID","SortOrder"],limit:400},
+  addonlinks:{title:"Add-on links",sub:"Associate_AddOn_Items — scopes each add-on to the categories it may be offered on (e.g. balloons are NOT linked to Sympathy).",
+        table:"Associate_AddOn_Items",pk:"id",
+        cols:["AddOnItemID","ItemCategoryID","ItemID"],limit:600}
 };
 
 let VIEW="orders";
