@@ -66,7 +66,8 @@ label.f{display:block;font-size:11px;text-transform:uppercase;color:var(--muted)
     <a data-v="reviews">Reviews (moderation)</a>
     <a data-v="customers">Customers</a>
     <div class="grp">Commerce rules</div>
-    <a data-v="tax">Taxes &amp; tax groups</a>
+    <a data-v="tax">Taxes</a>
+    <a data-v="taxgrp">Tax groups (compounding)</a>
     <a data-v="zip">Delivery by ZIP</a>
     <a data-v="ship">Ship methods</a>
     <a data-v="coupons">Coupons</a>
@@ -105,10 +106,11 @@ const M=document.getElementById("main");
 
 /* ---------- generic CRUD grid, config-driven ---------- */
 const GRIDS={
-  tax:{title:"Taxes",sub:"Individual taxes. TaxGroupDetail below assembles them into groups — TaxOnTax makes a tax compound on the ones before it.",
-       table:"Taxes",pk:"id",cols:["TaxID","TaxDescription","TaxPercent","GLTaxAccount","TaxOrder","Approved"],
-       extra:{title:"Tax group detail (compounding)",table:"TaxGroupDetail",pk:"id",
-              cols:["TaxGroupDetailID","TaxID","Description","TaxPercent","TaxOrder","TaxOnTax","GLTaxAccount"]}},
+  tax:{title:"Taxes",sub:"Individual taxes. 'Tax groups' assembles them — TaxOnTax makes a tax compound on the ones before it.",
+       table:"Taxes",pk:"id",cols:["TaxID","TaxDescription","TaxPercent","GLTaxAccount","TaxOrder","Approved"]},
+  taxgrp:{title:"Tax groups (compounding)",sub:"TaxGroupDetail — TaxOnTax = this tax applies on top of the taxes before it, by TaxOrder.",
+       table:"TaxGroupDetail",pk:"id",
+       cols:["TaxGroupDetailID","TaxID","Description","TaxPercent","TaxOrder","TaxOnTax","GLTaxAccount"]},
   zip:{title:"Delivery by ZIP",sub:"Drives whether we can deliver at all, the rate, and the same-day cut-off. Block = refuse the ZIP.",
        table:"DeliveryByZip",pk:"id",
        cols:["Zip","City","State","EveryDayRate","HolidayRate","AfterCutOffRate","CutOffTime","Weekday","Saturday","Sunday","Block"]},
@@ -154,6 +156,8 @@ const GRIDS={
 let VIEW="orders";
 document.querySelectorAll("aside a").forEach(a=>a.onclick=()=>{
   VIEW=a.dataset.v;
+  PAGE=0;                                   // reset paging
+  EDIT={view:null,id:null,row:null,cols:[],confirmDel:false};  // leave any edit page
   document.querySelectorAll("aside a").forEach(x=>x.classList.toggle("on",x===a));
   render();
 });
@@ -308,63 +312,135 @@ async function modReview(id,ok){
   reviews();
 }
 
-/* ---------- GENERIC EDITABLE GRID ---------- */
-async function grid(cfg,host){
-  const rows=await api(`${cfg.table}?${TQ}&select=*&limit=${cfg.limit||300}`);
-  const html=`<h2>${cfg.title}</h2>${cfg.sub?`<div class="sub2">${cfg.sub}</div>`:'<div class="sub2"></div>'}
+/* ---------- LIST VIEW (read-only) ---------- */
+let PAGE=0; const PER=50;
+async function grid(cfg){
+  const from=PAGE*PER;
+  const rows=await api(`${cfg.table}?${TQ}&select=*&order=${cfg.pk}.asc&limit=${PER}&offset=${from}`);
+  const all=await api(`${cfg.table}?${TQ}&select=${cfg.pk}`);
+  const total=all.length, pages=Math.max(1,Math.ceil(total/PER));
+  M.innerHTML=`<h2>${cfg.title}</h2><div class="sub2">${cfg.sub||""}</div>
   <div class="panel">
-    <div class="bar"><button onclick="addRow('${VIEW}')">+ New row</button>
-      <span class="sub2" style="margin:0">${rows.length} row(s) · table <b>${cfg.table}</b></span></div>
-    <table><thead><tr>${cfg.cols.map(c=>`<th>${c}</th>`).join("")}<th></th></tr></thead>
-    <tbody>${rows.map(r=>`<tr>${cfg.cols.map(c=>{
-      const v=r[c];
-      if(typeof v==="boolean"||v===null&&/Active|Enable|Block|Approved|Suspend|Weekday|Saturday|Sunday|TaxOnTax|AllowSameDayDelivery|Status/.test(c))
-        return `<td><input type="checkbox" ${v?"checked":""} onchange="save('${VIEW}',${r[cfg.pk]},'${c}',this.checked)"></td>`;
-      const long=/Content|Message|Description|Metatag|Keywords/.test(c);
-      return `<td>${long
-        ? `<textarea style="width:100%;min-height:52px" onchange="save('${VIEW}',${r[cfg.pk]},'${c}',this.value)">${esc(v)}</textarea>`
-        : `<input style="width:100%" value="${esc(v)}" onchange="save('${VIEW}',${r[cfg.pk]},'${c}',this.value)">`}</td>`;
-    }).join("")}<td><button class="danger" onclick="delRow('${VIEW}',${r[cfg.pk]})">Delete</button></td></tr>`).join("")}
+    <div class="bar">
+      <button onclick="openEdit('${VIEW}','new')">+ New ${cfg.title.replace(/s$/,'').toLowerCase()}</button>
+      <span class="sub2" style="margin:0">${total} record(s) · table <b>${cfg.table}</b></span>
+      <span style="flex:1"></span>
+      ${pages>1?`<button class="sec" ${PAGE===0?"disabled":""} onclick="PAGE--;render()">‹ Prev</button>
+        <span class="sub2" style="margin:0">Page ${PAGE+1} of ${pages}</span>
+        <button class="sec" ${PAGE>=pages-1?"disabled":""} onclick="PAGE++;render()">Next ›</button>`:""}
+    </div>
+    <table><thead><tr>${cfg.cols.map(c=>`<th>${c}</th>`).join("")}<th style="width:80px"></th></tr></thead>
+    <tbody>${rows.length?rows.map(r=>`<tr class="click" onclick="openEdit('${VIEW}',${r[cfg.pk]})">
+      ${cfg.cols.map(c=>{
+        const v=r[c];
+        if(typeof v==="boolean") return `<td>${v?"✓":"—"}</td>`;
+        const s=String(v==null?"":v);
+        return `<td>${esc(s.length>70?s.slice(0,70)+"…":s)}</td>`;
+      }).join("")}
+      <td><button class="sec" onclick="event.stopPropagation();openEdit('${VIEW}',${r[cfg.pk]})">Edit</button></td>
+    </tr>`).join(""):`<tr><td colspan="${cfg.cols.length+1}" style="color:var(--muted);padding:22px">No records.</td></tr>`}
     </tbody></table>
-    <div class="note">Edits save immediately to <b>${cfg.table}</b> and take effect on the storefront on next load.</div>
   </div>`;
-  M.innerHTML=html;
-  if(cfg.extra){
-    const er=await api(`${cfg.extra.table}?${TQ}&select=*`);
-    const d=document.createElement("div");
-    d.innerHTML=`<h2 style="margin-top:8px">${cfg.extra.title}</h2>
-    <div class="panel"><table><thead><tr>${cfg.extra.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>
-    <tbody>${er.map(r=>`<tr>${cfg.extra.cols.map(c=>{
-      const v=r[c];
-      if(typeof v==="boolean") return `<td><input type="checkbox" ${v?"checked":""} onchange="saveT('${cfg.extra.table}','${cfg.extra.pk}',${r[cfg.extra.pk]},'${c}',this.checked)"></td>`;
-      return `<td><input style="width:100%" value="${esc(v)}" onchange="saveT('${cfg.extra.table}','${cfg.extra.pk}',${r[cfg.extra.pk]},'${c}',this.value)"></td>`;
-    }).join("")}</tr>`).join("")}</tbody></table>
-    <div class="note"><b>TaxOnTax</b> = this tax compounds on top of the taxes before it (by TaxOrder).</div></div>`;
-    M.appendChild(d);
+}
+
+/* ---------- FULL-PAGE EDIT (no modals) ---------- */
+let EDIT={view:null,id:null,row:null,cols:[],confirmDel:false};
+const HIDE=/^(id|RowID|CartLineID|OrderLineNumber|LockedBy|LockTS|CompanyID|DivisionID|DepartmentID)$/;
+function fieldType(k,v){
+  if(typeof v==="boolean") return "bool";
+  if(/Content|Message|Description|Metatag|Keywords|Notes|Email_Content/.test(k)) return "text";
+  if(/Date$/.test(k)||/Date[A-Z]/.test(k)) return "date";
+  if(typeof v==="number") return "num";
+  return "str";
+}
+async function openEdit(view,id){
+  EDIT={view,id,row:null,cols:[],confirmDel:false};
+  const cfg=GRIDS[view];
+  if(id==="new"){
+    // derive columns from an existing row so the form matches the table
+    const sample=await api(`${cfg.table}?${TQ}&select=*&limit=1`);
+    const base=sample[0]?Object.fromEntries(Object.keys(sample[0]).map(k=>[k,null])):{};
+    EDIT.row={...base,CompanyID:CO,DivisionID:DV,DepartmentID:DP};
+  }else{
+    const r=await api(`${cfg.table}?${cfg.pk}=eq.${id}&select=*`);
+    EDIT.row=r[0];
+  }
+  renderEdit();
+}
+function renderEdit(){
+  const cfg=GRIDS[EDIT.view], r=EDIT.row||{};
+  const keys=Object.keys(r).filter(k=>!HIDE.test(k));
+  const isNew=EDIT.id==="new";
+  M.innerHTML=`
+  <div class="sub2"><span class="lnk" style="color:var(--accent);cursor:pointer" onclick="backToList()">← ${cfg.title}</span></div>
+  <h2>${isNew?"New record":"Edit"} <span style="color:var(--muted);font-weight:400">· ${cfg.table}</span></h2>
+  <div class="sub2">${isNew?"Creating a new row.":"Editing record "+EDIT.id}</div>
+  <div class="panel">
+    <div class="grid2" style="gap:0 22px">
+      ${keys.map(k=>{
+        const v=r[k], t=fieldType(k,v);
+        const wide = t==="text";
+        return `<div style="${wide?"grid-column:1/-1;":""}margin-bottom:12px">
+          <label class="f">${k}</label>
+          ${t==="bool"
+            ? `<label style="display:flex;align-items:center;gap:8px;font-size:13.5px">
+                 <input type="checkbox" id="fld_${k}" ${v?"checked":""}> <span>${k}</span></label>`
+            : t==="text"
+            ? `<textarea id="fld_${k}" style="width:100%;min-height:110px">${esc(v)}</textarea>`
+            : `<input id="fld_${k}" style="width:100%" value="${esc(v)}">`}
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="bar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <button onclick="saveEdit()">${isNew?"Create record":"Save changes"}</button>
+      <button class="sec" onclick="backToList()">Cancel</button>
+      <span style="flex:1"></span>
+      ${!isNew?(EDIT.confirmDel
+        ? `<span class="sub2" style="margin:0;color:var(--bad)">Delete this record?</span>
+           <button class="danger" onclick="reallyDelete()">Yes, delete</button>
+           <button class="sec" onclick="EDIT.confirmDel=false;renderEdit()">Keep it</button>`
+        : `<button class="danger" onclick="EDIT.confirmDel=true;renderEdit()">Delete</button>`):""}
+    </div>
+  </div>`;
+}
+function backToList(){ EDIT={view:null,id:null,row:null,cols:[],confirmDel:false}; render(); }
+function readForm(){
+  const r=EDIT.row, out={};
+  Object.keys(r).filter(k=>!HIDE.test(k)).forEach(k=>{
+    const el=document.getElementById("fld_"+k);
+    if(!el) return;
+    if(el.type==="checkbox") out[k]=el.checked;
+    else out[k]= el.value===""? null : el.value;
+  });
+  return out;
+}
+async function saveEdit(){
+  const cfg=GRIDS[EDIT.view];
+  const body=readForm();
+  try{
+    if(EDIT.id==="new"){
+      body.CompanyID=CO; body.DivisionID=DV; body.DepartmentID=DP;
+      await api(cfg.table,{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify(body)});
+      toast("Record created");
+    }else{
+      await api(`${cfg.table}?${cfg.pk}=eq.${EDIT.id}`,{method:"PATCH",
+        headers:{Prefer:"return=minimal"},body:JSON.stringify(body)});
+      toast("Saved to "+cfg.table);
+    }
+    backToList();
+  }catch(e){
+    // inline error on the page — no popups anywhere in this admin
+    EDIT.err=e.message; renderEdit();
+    const t=document.createElement("div");
+    t.className="err"; t.textContent="Save failed: "+e.message;
+    M.querySelector(".panel").prepend(t);
   }
 }
-async function save(view,id,col,val){
-  const cfg=GRIDS[view];
-  await api(`${cfg.table}?${cfg.pk}=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
-    body:JSON.stringify({[col]:val===""?null:val})});
-  toast("Saved "+col);
-}
-async function saveT(table,pk,id,col,val){
-  await api(`${table}?${pk}=eq.${id}`,{method:"PATCH",headers:{Prefer:"return=minimal"},
-    body:JSON.stringify({[col]:val===""?null:val})});
-  toast("Saved "+col);
-}
-async function addRow(view){
-  const cfg=GRIDS[view];
-  await api(cfg.table,{method:"POST",headers:{Prefer:"return=minimal"},
-    body:JSON.stringify({CompanyID:CO,DivisionID:DV,DepartmentID:DP})});
-  render();
-}
-async function delRow(view,id){
-  const cfg=GRIDS[view];
-  if(!confirm("Delete this row?")) return;
-  await api(`${cfg.table}?${cfg.pk}=eq.${id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});
-  render();
+async function reallyDelete(){
+  const cfg=GRIDS[EDIT.view];
+  await api(`${cfg.table}?${cfg.pk}=eq.${EDIT.id}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});
+  toast("Record deleted");
+  backToList();
 }
 /* ================= WYSIWYG EMAIL TEMPLATE BUILDER (GrapesJS newsletter preset) ================= */
 const TOKENS=[
