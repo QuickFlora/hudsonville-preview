@@ -63,31 +63,31 @@ label.f{display:block;font-size:11px;text-transform:uppercase;color:var(--muted)
     <div class="grp">Operations</div>
     <a data-v="dash">Dashboard</a>
     <a data-v="orders" class="on">Orders</a>
-    <a data-v="orderlines">Order lines</a>
-    <a data-v="reviews">Reviews (moderation)</a>
+    <a data-v="orderlines">Order items</a>
+    <a data-v="reviews">Reviews</a>
     <a data-v="customers">Customers</a>
-    <div class="grp">Commerce rules</div>
+    <div class="grp">Pricing &amp; delivery</div>
     <a data-v="tax">Taxes</a>
-    <a data-v="taxgrp">Tax groups (compounding)</a>
-    <a data-v="zip">Delivery by ZIP</a>
-    <a data-v="ship">Ship methods</a>
+    <a data-v="taxgrp">Tax groups</a>
+    <a data-v="zip">Delivery by ZIP code</a>
+    <a data-v="ship">Delivery methods</a>
     <a data-v="coupons">Coupons</a>
     <a data-v="gift">Gift cards</a>
     <a data-v="occasion">Occasions</a>
-    <div class="grp">Catalog</div>
-    <a data-v="items">Items</a>
+    <div class="grp">Catalogue</div>
+    <a data-v="items">Products</a>
     <a data-v="cats">Categories</a>
-    <a data-v="famcat">Family &amp; category links</a>
+    <a data-v="famcat">Product placement</a>
     <a data-v="addons">Add-ons</a>
     <a data-v="addonlinks">Add-on links</a>
     <div class="grp">Website</div>
-    <a data-v="companies">Company / logo</a>
+    <a data-v="companies">Shop details</a>
     <a data-v="home">Home page</a>
-    <a data-v="theme">Theme (FontsColor)</a>
-    <a data-v="seo">SEO / social</a>
+    <a data-v="theme">Theme</a>
+    <a data-v="seo">Search &amp; social</a>
     <a data-v="pages">Content pages</a>
-    <a data-v="slider">Sliders</a>
-    <a data-v="sliderimg">Slider images</a>
+    <a data-v="slider">Home page banners</a>
+    <a data-v="sliderimg">Occasion tiles</a>
     <a data-v="email">Email templates</a>
   </aside>
   <main id="main"><div class="panel">Loading…</div></main>
@@ -105,59 +105,180 @@ const money=n=>"$"+Number(n||0).toFixed(2);
 const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const M=document.getElementById("main");
 
+/* =====================================================================
+   FIELD LABELS — no database column name is ever shown to a user.
+   Explicit English for anything ambiguous; the humaniser below handles
+   the rest (splits CamelCase, expands known abbreviations).
+   ===================================================================== */
+const LABELS={
+  // taxes
+  TaxID:"Tax code", TaxDescription:"Tax name", TaxPercent:"Rate (%)", GLTaxAccount:"Accounting code",
+  TaxOrder:"Applied in order", TaxOnTax:"Charge on top of earlier taxes", TaxGroupDetailID:"Tax group",
+  TaxGroupID:"Tax group", TotalPercent:"Total rate (%)",
+  // delivery
+  Zip:"ZIP code", EveryDayRate:"Standard rate", HolidayRate:"Holiday rate",
+  AfterCutOffRate:"After cut-off rate", CourierRate:"Courier rate", CutOffTime:"Same-day cut-off time",
+  Weekday:"Delivers weekdays", Saturday:"Delivers Saturdays", Sunday:"Delivers Sundays",
+  Block:"Do not deliver here", PrintPoolTicket:"Print pool ticket", DST:"Daylight saving",
+  ShipMethodID:"Delivery method", ShipMethodDescription:"Delivery method name",
+  AllowSameDayDelivery:"Allow same-day", SpecialDeliveryCharge:"Special delivery charge",
+  Message:"Message shown at checkout", FreighPayment:"Freight paid by", InventoryLocation:"Location",
+  AutoInvoice:"Invoice automatically",
+  LocalDeliveryCharge:"Local delivery charge", ServiceCharge:"Service charge",
+  DeliveryTaxable:"Tax the delivery charge", ServiceTaxable:"Tax the service charge",
+  MinimumOrder:"Enforce a minimum order", MinimumOrderAmount:"Minimum order amount",
+  // coupons & gift cards
+  CouponCode:"Coupon code", OfferType:"Discount type", CouponCodeRate:"Discount amount",
+  MinimumOrderRate:"Minimum order", StartDate:"Valid from", EndDate:"Valid until",
+  TotalCouponUsed:"Times used", TotalToDate:"Maximum uses", Active:"Active",
+  CouponLevel:"Applies to", CouponType:"Coupon type", AllowedAll:"Available to everyone",
+  FrontEndURL:"Landing page", CouponUsedSameCustomer:"Uses per customer",
+  GiftCardNumber:"Gift card number", Amount:"Original value", UsedAmount:"Amount used",
+  BalanceAmount:"Remaining balance", ExpiryDate:"Expires", Suspend:"Suspended",
+  IssueDate:"Issued", IssuedBy:"Issued by", AuthKey:"Security code",
+  // catalog
+  ItemID:"Product code", ItemName:"Product name", Price:"Standard price",
+  DeluxePrice:"Deluxe price", PremiumPrice:"Premium price", IsActive:"Show on website",
+  ItemDescription:"Short description", ItemLongDescription:"Full description",
+  SalesDescription:"Sales description", PictureURL:"Image", LargePictureURL:"Large image",
+  ItemCategoryID:"Category", ItemFamilyID:"Department", CategoryName:"Category name",
+  SortOrder:"Display order", ItemColor:"Colour", ItemSize:"Size", ItemUOM:"Unit",
+  AddOnItemID:"Add-on code", AddOnItemName:"Add-on name", AddOnDescription:"Add-on description",
+  ItemFileName:"Image",
+  // occasions
+  OccasionID:"Occasion code", OccasionDesc:"Occasion",
+  // storefront content
+  FooterMessageHead:"Footer heading", FooterMessage:"Footer text",
+  NewWebsitePhoneText:"Banner text", NewWebsitePhoneNumber:"Banner phone number",
+  Webcolor1:"Primary colour", Webcolor2:"Accent colour",
+  PageID:"Applies to", ColorCode:"Colour", InlineNumber:"Display order",
+  Title:"Page title", Metatag:"Meta description", Keywords:"Keywords",
+  Facebooklink:"Facebook", instagram:"Instagram", Pinterest:"Pinterest", yelp:"Yelp",
+  ContentLinkID:"Page code", ContentLink:"Page name", ContentText:"Page content",
+  ContentActive:"Show in footer",
+  SliderName:"Slide name", SliderText1:"Headline", SliderLink:"Button link",
+  SliderLinkName:"Button text", SliderImage1:"Slide image", rownumber:"Display order",
+  Enable:"Show on website",
+  SliderOccassionName:"Tile name", SliderImageName:"Tile image",
+  // company
+  CompanyName:"Shop name", CompanyEmail:"Email address", CompanyPhone:"Phone number",
+  TollFreeNumber:"Toll-free number", CompanyWebAddress:"Website address",
+  CompanyLogoUrl:"Logo", CurrencySymbol:"Currency symbol",
+  // email
+  Full_Name:"Template name", Email_Subject:"Subject line", Email_Content:"Email body",
+  Status:"Active", LocationID:"Location",
+  // customers
+  CustomerID:"Customer", CustomerFirstName:"First name", CustomerLastName:"Last name",
+  CustomerEmail:"Email address", CustomerPhone:"Phone number", CustomerCell:"Mobile number",
+  CustomerCity:"City", CustomerZip:"ZIP code", CustomerAddress1:"Address",
+  CustomerAddress2:"Address line 2", CustomerState:"State", CustomerCountry:"Country",
+  CustomerCompany:"Company", CustomerLogin:"Sign-in name", CustomerSalutation:"Title",
+  CustomerSince:"Customer since", CreditLimit:"Credit limit", AuthUserID:"Sign-in ID",
+  // orders
+  OrderNumber:"Order number", OrderDate:"Ordered on", OrderDueDate:"Delivery date",
+  DeliveryDateTime:"Delivery date & time", SystemDate:"Recorded on",
+  ShippingName:"Recipient", ShippingFirstName:"Recipient first name",
+  ShippingLastName:"Recipient last name", ShippingAddress1:"Recipient address",
+  ShippingAddress2:"Recipient address line 2", ShippingCity:"Recipient city",
+  ShippingState:"Recipient state", ShippingZip:"Recipient ZIP", ShippingCountry:"Recipient country",
+  ShippingPhone:"Recipient phone", ShippingAttention:"Attention", OccasionCode:"Occasion",
+  DestinationType:"Destination", Priority:"Priority", Subtotal:"Items subtotal",
+  TaxableSubTotal:"Taxable amount", TaxAmount:"Tax", Freight:"Delivery charge",
+  Handling:"Service charge", DiscountAmount:"Discount", Coupon:"Coupon",
+  DiscountCouponCode:"Coupon code", DiscountCouponAmount:"Coupon discount",
+  Total:"Order total", AmountPaid:"Amount paid", BalanceDue:"Balance due",
+  PaymentMethodID:"Payment method", GiftCertificate:"Gift card",
+  CreditCardTypeID:"Card type", CreditCardNumber:"Card number (masked)",
+  CreditCardApprovalNumber:"Authorisation code", CreditCardName:"Name on card",
+  StoredCreditCard:"Card stored", Approved:"Approved", Printed:"Printed",
+  Shipped:"Shipped", Billed:"Billed", Invoiced:"Invoiced", Posted:"Posted",
+  Delivered:"Delivered", CardPrint:"Card printed", ApprovedBy:"Approved by",
+  ApprovedDate:"Approved on", ApprovedAt:"Approved on", WireOutStatus:"Wire-out status",
+  CustomerComments:"Delivery instructions", InternalNotes:"Internal notes",
+  txtDELIVERYTIME:"Requested delivery time", txtDELIVERYADDRESS:"Delivery address notes",
+  SendDeliveryConfirmationSMS:"Send delivery text message", DeliverySMSPhone:"Text message number",
+  HeaderMemo1:"Memo", EnteredBy:"Entered by", EmployeeID:"Employee",
+  OrderTypeID:"Order type", TransactionTypeID:"Transaction type", CurrencyID:"Currency",
+  PurchaseOrderNumber:"Purchase order number", IpAddress:"IP address",
+  TaxFreight:"Tax the delivery charge", WireService:"Wire service",
+  WireServiceOwner:"Wire service owner", Relay:"Relay", RelayRate:"Relay rate",
+  // order lines
+  LineId:"Line", Description:"Product", OrderQty:"Quantity", ItemUnitPrice:"Unit price",
+  OrgItemUnitPrice:"Original unit price", SubTotal:"Line subtotal", Taxable:"Taxable",
+  CardMessage:"Card message", DeliveryCharge:"Delivery charge", ItemCost:"Cost",
+  DiscountPerc:"Discount (%)", DiscountPromoCode:"Promo code", ItemAddTimeStamp:"Added on",
+  // reviews
+  ReviewID:"Review number", ReviewBy:"Reviewer", ReviewDate:"Reviewed on",
+  Review:"Review", Rating:"Rating", Helpful:"Marked helpful", Views:"Views",
+  Comments:"Internal comments"
+};
+/* Anything not in the dictionary: split CamelCase / snake_case into words and tidy it up. */
+function LBL(col){
+  if(LABELS[col]) return LABELS[col];
+  let s=String(col)
+    .replace(/_/g," ")
+    .replace(/([a-z0-9])([A-Z])/g,"$1 $2")
+    .replace(/\b(ID|Id)\b/g,"")
+    .replace(/\bDesc\b/gi,"description")
+    .replace(/\bQty\b/gi,"quantity")
+    .replace(/\bURL\b/gi,"link")
+    .replace(/\s+/g," ").trim();
+  return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();
+}
+
 /* ---------- generic CRUD grid, config-driven ---------- */
 const GRIDS={
-  tax:{title:"Taxes",sub:"Individual taxes. 'Tax groups' assembles them — TaxOnTax makes a tax compound on the ones before it.",
+  tax:{title:"Taxes",sub:"The individual taxes you charge. Tax groups combine them; a tax can be set to charge on top of the ones before it.",
        table:"Taxes",pk:"id",cols:["TaxID","TaxDescription","TaxPercent","GLTaxAccount","TaxOrder","Approved"]},
-  taxgrp:{title:"Tax groups (compounding)",sub:"TaxGroupDetail — TaxOnTax = this tax applies on top of the taxes before it, by TaxOrder.",
+  taxgrp:{title:"Tax groups",sub:"Combine taxes into a group. Set 'Charge on top of earlier taxes' when a tax must be applied to the running total, not the item price.",
        table:"TaxGroupDetail",pk:"id",
        cols:["TaxGroupDetailID","TaxID","Description","TaxPercent","TaxOrder","TaxOnTax","GLTaxAccount"]},
-  zip:{title:"Delivery by ZIP",sub:"Drives whether we can deliver at all, the rate, and the same-day cut-off. Block = refuse the ZIP.",
+  zip:{title:"Delivery by ZIP",sub:"Controls whether you deliver to a ZIP code at all, what you charge, and the same-day cut-off time.",
        table:"DeliveryByZip",pk:"id",
        cols:["Zip","City","State","EveryDayRate","HolidayRate","AfterCutOffRate","CutOffTime","Weekday","Saturday","Sunday","Block"]},
-  ship:{title:"Ship methods",sub:"ShipMethodID is written onto every OrderHeader.",table:"ShipmentMethods",pk:"id",
+  ship:{title:"Delivery methods",sub:"The delivery options a customer can choose at checkout.",table:"ShipmentMethods",pk:"id",
         cols:["ShipMethodID","ShipMethodDescription","AllowSameDayDelivery","SpecialDeliveryCharge","Message"]},
   coupons:{title:"Coupons",sub:"Validated server-side at checkout: active, date window, minimum order, blackout dates, usage limit.",
         table:"Coupons",pk:"id",
         cols:["CouponCode","OfferType","CouponCodeRate","MinimumOrderRate","StartDate","EndDate","TotalCouponUsed","TotalToDate","Active"]},
-  gift:{title:"Gift cards",sub:"Balance is decremented server-side on redemption and logged to GiftCardLog.",
+  gift:{title:"Gift cards",sub:"Balances are reduced automatically when a card is redeemed, and every redemption is logged.",
         table:"GiftCards",pk:"id",cols:["GiftCardNumber","Amount","UsedAmount","BalanceAmount","Active","Suspend","ExpiryDate","OrderNumber"]},
-  occasion:{title:"Occasions",sub:"Master list driving OrderHeader.OccasionCode and the checkout dropdown.",
+  occasion:{title:"Occasions",sub:"The occasions a customer can pick at checkout.",
         table:"Occasion",pk:"id",cols:["OccasionID","OccasionDesc"]},
-  items:{title:"Items",sub:"Catalog. Price / DeluxePrice / PremiumPrice are the only prices checkout will accept.",
+  items:{title:"Products",sub:"Your product catalogue. Standard, Deluxe and Premium are the only prices checkout will accept.",
         table:"InventoryItems",pk:"id",cols:["ItemID","ItemName","Price","DeluxePrice","PremiumPrice","IsActive"],limit:60},
   cats:{title:"Categories",table:"InventoryCategories",pk:"id",cols:["ItemFamilyID","ItemCategoryID","CategoryName","SortOrder"]},
-  addons:{title:"Add-ons",sub:"Associate_AddOn_Items scopes which categories each add-on may appear on.",
+  addons:{title:"Add-ons",sub:"Extras offered at checkout, such as balloons or chocolates. Use 'Add-on links' to control which categories each one appears on.",
         table:"AddOnItems",pk:"id",cols:["AddOnItemID","AddOnItemName","Price","AddOnDescription","IsActive"]},
   home:{title:"Home page",table:"HomePageManagement",pk:"id",
         cols:["FooterMessageHead","FooterMessage","NewWebsitePhoneText","NewWebsitePhoneNumber","Webcolor1","Webcolor2","IsActive"]},
-  theme:{title:"Theme (FontsColor)",sub:"Every colour and font on the storefront.",table:"FontsColor",pk:"id",cols:["PageID","ColorCode","InlineNumber"]},
-  seo:{title:"SEO",table:"SEO",pk:"id",cols:["Title","Metatag","Keywords","Facebooklink","instagram","Pinterest","yelp"]},
+  theme:{title:"Theme",sub:"Every colour and font on the website.",table:"FontsColor",pk:"id",cols:["PageID","ColorCode","InlineNumber"]},
+  seo:{title:"Search & social",table:"SEO",pk:"id",cols:["Title","Metatag","Keywords","Facebooklink","instagram","Pinterest","yelp"]},
   pages:{title:"Content pages",table:"ContentLinks",pk:"id",cols:["ContentLinkID","ContentLink","ContentText","ContentActive","SortOrder"]},
-  slider:{title:"Sliders",table:"CustomWebsiteSlider",pk:"id",cols:["SliderName","SliderText1","SliderLink","SliderLinkName","SliderImage1","rownumber","Enable"]},
-  email:{title:"Email templates",sub:"Used to render the order confirmation. {{tokens}} are substituted at send time.",
+  slider:{title:"Home page banners",table:"CustomWebsiteSlider",pk:"id",cols:["SliderName","SliderText1","SliderLink","SliderLinkName","SliderImage1","rownumber","Enable"]},
+  email:{title:"Email templates",sub:"Used to build the order confirmation email. Merge fields in double braces are replaced with the real order details when the email is sent.",
         table:"EmailTemplates",pk:"RowID",cols:["Full_Name","Email_Subject","Email_Content","Status"]},
-  customers:{title:"Customers",sub:"CustomerInformation. Note: the production cleartext CustomerPassword column is deliberately NOT replicated here.",
+  customers:{title:"Customers",sub:"Customer accounts. Passwords are held by the sign-in provider, never in this database.",
         table:"CustomerInformation",pk:"id",cols:["CustomerID","CustomerFirstName","CustomerLastName","CustomerEmail","CustomerPhone","CustomerCity","CustomerZip"]},
   /* --- parity with the earlier table-editor admin --- */
-  companies:{title:"Company / logo",sub:"Drives the storefront logo, name, phone, email and currency symbol.",
+  companies:{title:"Shop details",sub:"Your logo, shop name, phone, email and currency, as shown on the website.",
         table:"Companies",pk:"id",
         cols:["CompanyName","CompanyEmail","CompanyPhone","TollFreeNumber","CompanyWebAddress","CompanyLogoUrl","CurrencySymbol","IsActive"]},
-  sliderimg:{title:"Slider images / occasion tiles",sub:"CustomWebsiteSliderImagesList — the four occasion tiles on the storefront home page.",
+  sliderimg:{title:"Occasion tiles",sub:"The occasion tiles shown on the website home page.",
         table:"CustomWebsiteSliderImagesList",pk:"id",
         cols:["SliderOccassionName","SliderImageName","rownumber"]},
-  famcat:{title:"Family &amp; category links",sub:"ItemFamilyCategoryAssociation — which products appear in which category.",
+  famcat:{title:"Product placement",sub:"Which products appear in which category.",
         table:"ItemFamilyCategoryAssociation",pk:"id",
         cols:["ItemFamilyID","ItemCategoryID","ItemID","SortOrder"],limit:400},
-  addonlinks:{title:"Add-on links",sub:"Associate_AddOn_Items — scopes each add-on to the categories it may be offered on (e.g. balloons are NOT linked to Sympathy).",
+  addonlinks:{title:"Add-on links",sub:"Which categories each add-on may be offered on. Balloons, for example, are deliberately not offered with sympathy flowers.",
         table:"Associate_AddOn_Items",pk:"id",
         cols:["AddOnItemID","ItemCategoryID","ItemID"],limit:600},
   /* record editors reached from the Orders / Reviews screens */
-  orderhdr:{title:"Order",sub:"OrderHeader — the full order record.",table:"OrderHeader",pk:"id",
+  orderhdr:{title:"Order",sub:"The full order record.",table:"OrderHeader",pk:"id",
         cols:["OrderNumber","CustomerID","ShippingName","Total","Approved","Printed","Shipped","Billed"]},
-  orderlines:{title:"Order lines",sub:"OrderDetail — one row per item on an order.",table:"OrderDetail",pk:"OrderLineNumber",
+  orderlines:{title:"Order items",sub:"One row per item on an order.",table:"OrderDetail",pk:"OrderLineNumber",
         cols:["OrderNumber","LineId","ItemID","Description","OrderQty","ItemUnitPrice","SubTotal","Total"]},
-  reviewrec:{title:"Review",sub:"InventoryItemCustomerReviews — only Approved=true rows show on the storefront.",
+  reviewrec:{title:"Review",sub:"Only approved reviews appear on the website.",
         table:"InventoryItemCustomerReviews",pk:"id",
         cols:["ItemID","ReviewBy","Rating","Approved","Review"]}
 };
@@ -204,7 +325,7 @@ async function dash(){
   const rev=oh.reduce((s,o)=>s+Number(o.Total||0),0);
   const due=oh.reduce((s,o)=>s+Number(o.BalanceDue||0),0);
   const liab=gcs.reduce((s,g)=>s+Number(g.BalanceAmount||0),0);
-  M.innerHTML=`<h2>Dashboard</h2><div class="sub2">Live from the database.</div>
+  M.innerHTML=`<h2>Dashboard</h2><div class="sub2">A live view of your shop.</div>
   <div class="kpi">
     <div><span>Orders</span><b>${oh.length}</b></div>
     <div><span>Revenue</span><b>${money(rev)}</b></div>
@@ -226,7 +347,7 @@ async function orders(){
     return [o.OrderNumber,o.ShippingName,o.CustomerID,o.ShippingZip,o.ShippingCity]
       .some(v=>String(v||"").toLowerCase().includes(s));
   });
-  M.innerHTML=`<h2>Orders</h2><div class="sub2">Every order placed on the storefront, straight from <b>OrderHeader</b>.</div>
+  M.innerHTML=`<h2>Orders</h2><div class="sub2">Every order placed on the website.</div>
   <div class="panel">
     <div class="bar">
       <input id="q" placeholder="Search order #, recipient, customer, ZIP…" style="min-width:300px" value="${esc(O_SEARCH)}">
@@ -294,15 +415,16 @@ async function orderDetail(num){
       ${row("Tax group",'<span class="mono">'+esc(o.TaxGroupID)+'</span> @ '+(o.TaxPercent||0)+'%')}
       ${row("Tax",money(o.TaxAmount))}
       ${row("<b>Total</b>","<b>"+money(o.Total)+"</b>")}
-      ${row("Gift card",esc(o.GiftCertificate)+" &minus;"+money(o.AmountPaid))}
+      ${row("Gift card",o.GiftCertificate?esc(o.GiftCertificate):"—")}
+      ${row("Amount paid",money(o.AmountPaid))}
       ${row("Balance due","<b>"+money(o.BalanceDue)+"</b>")}
       ${row("Payment method",esc(o.PaymentMethodID))}
       ${row("Card",esc(o.CreditCardTypeID)+" "+esc(o.CreditCardNumber||""))}
       ${row("Auth code",'<span class="mono">'+esc(o.CreditCardApprovalNumber||"—")+'</span>')}
     </table></div>
   </div>
-  <div class="panel"><h3>Lines (OrderDetail)</h3>
-    <table><thead><tr><th>#</th><th>ItemID</th><th>Description</th><th>Qty</th><th>Unit</th><th>Subtotal</th><th>Delivery</th><th style="width:70px"></th></tr></thead>
+  <div class="panel"><h3>Items on this order</h3>
+    <table><thead><tr><th>#</th><th>Product code</th><th>Product</th><th>Qty</th><th>Unit price</th><th>Line subtotal</th><th>Delivery</th><th style="width:70px"></th></tr></thead>
     <tbody>${d.map(l=>`<tr class="click" onclick="openEdit('orderlines',${l.OrderLineNumber})">
       <td>${l.LineId}</td><td class="mono">${esc(l.ItemID)}</td><td>${esc(l.Description)}</td>
       <td>${Number(l.OrderQty)}</td><td>${money(l.ItemUnitPrice)}</td><td>${money(l.SubTotal)}</td>
@@ -324,7 +446,7 @@ async function setStatus(num,s){
 /* ---------- REVIEWS MODERATION ---------- */
 async function reviews(){
   const rows=await api(`InventoryItemCustomerReviews?${TQ}&select=*&order=ReviewID.desc`);
-  M.innerHTML=`<h2>Reviews</h2><div class="sub2">Only <b>Approved = true</b> rows appear on the storefront. Click a review to open its record page.</div>
+  M.innerHTML=`<h2>Reviews</h2><div class="sub2">Only approved reviews appear on the website. Click a review to open it.</div>
   <div class="panel"><table>
    <thead><tr><th>Item</th><th>By</th><th>Rating</th><th>Review</th><th>Status</th><th style="width:210px"></th></tr></thead>
    <tbody>${rows.length?rows.map(r=>`<tr class="click" onclick="openEdit('reviewrec',${r.id})">
@@ -356,13 +478,13 @@ async function grid(cfg){
   <div class="panel">
     <div class="bar">
       <button onclick="openEdit('${VIEW}','new')">+ New ${cfg.title.replace(/s$/,'').toLowerCase()}</button>
-      <span class="sub2" style="margin:0">${total} record(s) · table <b>${cfg.table}</b></span>
+      <span class="sub2" style="margin:0">${total} record${total===1?"":"s"}</span>
       <span style="flex:1"></span>
       ${pages>1?`<button class="sec" ${PAGE===0?"disabled":""} onclick="PAGE--;render()">‹ Prev</button>
         <span class="sub2" style="margin:0">Page ${PAGE+1} of ${pages}</span>
         <button class="sec" ${PAGE>=pages-1?"disabled":""} onclick="PAGE++;render()">Next ›</button>`:""}
     </div>
-    <table><thead><tr>${cfg.cols.map(c=>`<th>${c}</th>`).join("")}<th style="width:80px"></th></tr></thead>
+    <table><thead><tr>${cfg.cols.map(c=>`<th>${esc(LBL(c))}</th>`).join("")}<th style="width:80px"></th></tr></thead>
     <tbody>${rows.length?rows.map(r=>`<tr class="click" onclick="openEdit('${VIEW}',${r[cfg.pk]})">
       ${cfg.cols.map(c=>{
         const v=r[c];
@@ -405,19 +527,19 @@ function renderEdit(){
   const keys=Object.keys(r).filter(k=>!HIDE.test(k));
   const isNew=EDIT.id==="new";
   M.innerHTML=`
-  <div class="sub2"><span class="lnk" style="color:var(--accent);cursor:pointer" onclick="backToList()">← ${cfg.title}</span></div>
-  <h2>${isNew?"New record":"Edit"} <span style="color:var(--muted);font-weight:400">· ${cfg.table}</span></h2>
-  <div class="sub2">${isNew?"Creating a new row.":"Editing record "+EDIT.id}</div>
+  <div class="sub2"><span class="lnk" style="color:var(--accent);cursor:pointer" onclick="backToList()">← Back to ${esc(cfg.title.toLowerCase())}</span></div>
+  <h2>${isNew?"New "+esc(cfg.title.replace(/s$/,'').toLowerCase()):"Edit "+esc(cfg.title.replace(/s$/,'').toLowerCase())}</h2>
+  <div class="sub2">${isNew?"Fill in the details below and save.":"Change any detail below and save."}</div>
   <div class="panel">
     <div class="grid2" style="gap:0 22px">
       ${keys.map(k=>{
-        const v=r[k], t=fieldType(k,v);
+        const v=r[k], t=fieldType(k,v), lab=esc(LBL(k));
         const wide = t==="text";
         return `<div style="${wide?"grid-column:1/-1;":""}margin-bottom:12px">
-          <label class="f">${k}</label>
+          <label class="f">${lab}</label>
           ${t==="bool"
             ? `<label style="display:flex;align-items:center;gap:8px;font-size:13.5px">
-                 <input type="checkbox" id="fld_${k}" ${v?"checked":""}> <span>${k}</span></label>`
+                 <input type="checkbox" id="fld_${k}" ${v?"checked":""}> <span>${lab}</span></label>`
             : t==="text"
             ? `<textarea id="fld_${k}" style="width:100%;min-height:110px">${esc(v)}</textarea>`
             : `<input id="fld_${k}" style="width:100%" value="${esc(v)}">`}
